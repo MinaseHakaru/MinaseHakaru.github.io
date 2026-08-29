@@ -39,7 +39,6 @@ Typography: **Shippori Mincho** (serif — branding mark, tool titles), **Zen Ka
 
 ## Known inconsistencies (verified against current code)
 
-- **原稿用紙 sheet count vs 文字数カウント's estimate disagree by design.** 文字数カウント's "原稿用紙（400字詰め）" tile is `Math.ceil(totalChars/400)`, a rough estimate. 原稿用紙エディタ's actual page count comes from `layoutGenkou()`, which also spends cells on paragraph indents (a blank cell after every `\n`) and kinsoku packing, so the same text yields a different sheet count in each tool. To unify them, make the counter call `layoutGenkou()` instead of the `/400` shortcut.
 - **No `<label>`/`aria-label` on any `<textarea>`** — inputs rely on visible heading + placeholder text only, not a programmatic label association.
 
 ## Kanji-grade data (漢字利用チェック)

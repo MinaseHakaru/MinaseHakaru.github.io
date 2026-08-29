@@ -525,6 +525,45 @@
     return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  /* ===================== 原稿用紙レイアウト (共有) ===================== */
+  const KINSOKU_HEAD_FORBID = new Set(['。','、','，','．','）','」','』','】','〉','》','・','！','？','ー','々','ゝ','ゞ','ぁ','ぃ','ぅ','ぇ','ぉ','ゃ','ゅ','ょ','っ',')',']','}',',','.']);
+  const GENKOU_COLS = 20, GENKOU_ROWS = 20, GENKOU_PER_SHEET = GENKOU_COLS * GENKOU_ROWS;
+
+  function layoutGenkou(text){
+    const sheets = [[]];
+    let cur = sheets[0];
+    let col = 0;
+    let lastCell = null;
+    function newSheetIfNeeded(){
+      if (cur.length >= GENKOU_PER_SHEET){ cur = []; sheets.push(cur); }
+    }
+    function placeBlank(){
+      newSheetIfNeeded();
+      const cell = {main:null, trail:null};
+      cur.push(cell);
+      lastCell = cell;
+      col = (col+1) % GENKOU_COLS;
+    }
+    function placeChar(ch){
+      if (col === 0 && KINSOKU_HEAD_FORBID.has(ch) && lastCell && lastCell.main && !lastCell.trail){
+        lastCell.trail = ch;
+        return;
+      }
+      newSheetIfNeeded();
+      const cell = {main: ch, trail: null};
+      cur.push(cell);
+      lastCell = cell;
+      col = (col+1) % GENKOU_COLS;
+    }
+    const paragraphs = text.split('\n');
+    paragraphs.forEach((para, pIdx) => {
+      if (pIdx > 0) while (col !== 0) placeBlank();
+      placeBlank();
+      for (const ch of Array.from(para)) placeChar(ch);
+    });
+    return sheets;
+  }
+
   /* ===================== router ===================== */
   const VIEWS = ['cover','count','zenhan','kana','genkou','kanji','summarize'];
   function currentRoute(){
@@ -563,7 +602,7 @@
       const wsSet = new Set(['\n','\r','\t',' ','　']);
       const noSpace = codepoints.filter(c => !wsSet.has(c)).length;
       const lines = text === '' ? 0 : text.split('\n').length;
-      const sheets = total === 0 ? 0 : Math.ceil(total/400);
+      const sheets = total === 0 ? 0 : layoutGenkou(text).length;
       const variants = (text.match(VARIANT_RE) || []).length;
       const utf8Bytes = new TextEncoder().encode(text).length;
       const utf16Bytes = text.length * 2;
@@ -770,44 +809,6 @@
     const prevBtn = document.getElementById('gk-prev');
     const nextBtn = document.getElementById('gk-next');
 
-    const KINSOKU_HEAD_FORBID = new Set(['。','、','，','．','）','」','』','】','〉','》','・','！','？','ー','々','ゝ','ゞ','ぁ','ぃ','ぅ','ぇ','ぉ','ゃ','ゅ','ょ','っ',')',']','}',',','.']);
-    const COLS = 20, ROWS = 20, PER_SHEET = COLS * ROWS;
-
-    function layoutGenkou(text){
-      const sheets = [[]];
-      let cur = sheets[0];
-      let col = 0;
-      let lastCell = null;
-      function newSheetIfNeeded(){
-        if (cur.length >= PER_SHEET){ cur = []; sheets.push(cur); }
-      }
-      function placeBlank(){
-        newSheetIfNeeded();
-        const cell = {main:null, trail:null};
-        cur.push(cell);
-        lastCell = cell;
-        col = (col+1) % COLS;
-      }
-      function placeChar(ch){
-        if (col === 0 && KINSOKU_HEAD_FORBID.has(ch) && lastCell && lastCell.main && !lastCell.trail){
-          lastCell.trail = ch;
-          return;
-        }
-        newSheetIfNeeded();
-        const cell = {main: ch, trail: null};
-        cur.push(cell);
-        lastCell = cell;
-        col = (col+1) % COLS;
-      }
-      const paragraphs = text.split('\n');
-      paragraphs.forEach((para, pIdx) => {
-        if (pIdx > 0) while (col !== 0) placeBlank();
-        placeBlank();
-        for (const ch of Array.from(para)) placeChar(ch);
-      });
-      return sheets;
-    }
-
     let currentPage = 0, totalSheets = 1;
     function showPage(idx){
       const sheetEls = sheetsEl.querySelectorAll('.genkou-sheet');
@@ -832,7 +833,7 @@
         label.textContent = `${sIdx+1}枚目 / 全${totalSheets}枚`;
         const grid = document.createElement('div');
         grid.className = 'gk-grid';
-        for (let i = 0; i < PER_SHEET; i++){
+        for (let i = 0; i < GENKOU_PER_SHEET; i++){
           const cellData = sheet[i] || {main:null, trail:null};
           const cell = document.createElement('div');
           cell.className = 'gk-cell';
