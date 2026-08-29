@@ -8,7 +8,6 @@ A collection of small, self-contained Japanese-language web tools published as s
 
 Current files:
 - `writing_tools.html` — "文章づくり道具帖", a multi-tool suite (hash-router SPA) covering: 文字数カウント, 全角⇔半角変換, かな⇔ローマ字変換, 原稿用紙エディタ, 漢字利用チェック, 指定文字数で要約 (文単位の重要文抽出 — not an AI/semantic summary, and should be described to users as such).
-- `moji_count.html` — the original standalone character-counter; superseded by the "文字数カウント" view inside `writing_tools.html`, kept only for reference.
 
 ## Working with this codebase
 
