@@ -777,17 +777,26 @@
       const sheets = [[]];
       let cur = sheets[0];
       let col = 0;
+      let lastCell = null;
       function newSheetIfNeeded(){
         if (cur.length >= PER_SHEET){ cur = []; sheets.push(cur); }
       }
-      function placeBlank(){ newSheetIfNeeded(); cur.push({main:null, trail:null}); col = (col+1) % COLS; }
-      function placeChar(ch){
+      function placeBlank(){
         newSheetIfNeeded();
-        if (col === 0 && KINSOKU_HEAD_FORBID.has(ch) && cur.length > 0){
-          const last = cur[cur.length-1];
-          if (last && last.main && !last.trail){ last.trail = ch; return; }
+        const cell = {main:null, trail:null};
+        cur.push(cell);
+        lastCell = cell;
+        col = (col+1) % COLS;
+      }
+      function placeChar(ch){
+        if (col === 0 && KINSOKU_HEAD_FORBID.has(ch) && lastCell && lastCell.main && !lastCell.trail){
+          lastCell.trail = ch;
+          return;
         }
-        cur.push({main: ch, trail: null});
+        newSheetIfNeeded();
+        const cell = {main: ch, trail: null};
+        cur.push(cell);
+        lastCell = cell;
         col = (col+1) % COLS;
       }
       const paragraphs = text.split('\n');
