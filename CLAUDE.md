@@ -37,10 +37,6 @@ Typography: **Shippori Mincho** (serif — branding mark, tool titles), **Zen Ka
 
 **Router gap:** `document.title` is never updated on `hashchange` in `renderRoute()` — every view shows the same browser-tab title. Update it there if per-view titles become important (tab disambiguation, SEO on a future multi-page split).
 
-## Known inconsistencies (verified against current code)
-
-- **No `<label>`/`aria-label` on any `<textarea>`** — inputs rely on visible heading + placeholder text only, not a programmatic label association.
-
 ## Kanji-grade data (漢字利用チェック)
 
 `KYOIKU_KANJI` (grades 1–6, 1026 characters total) was scraped from Japanese Wikipedia's 学年別漢字配当表 article and verified before embedding: exact per-grade counts (80/160/200/202/193/191), all 1026 characters unique, no duplicates. If this table is ever regenerated, re-verify those counts the same way rather than trusting a fresh scrape blindly.

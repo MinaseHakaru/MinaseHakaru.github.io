@@ -316,7 +316,7 @@
           </div>
         </div>
         <div class="tool-body">
-          <textarea id="cnt-input" style="min-height:380px;" placeholder="ここに文章を入力、または貼り付けてください…"></textarea>
+          <textarea id="cnt-input" aria-label="カウントする文章の入力欄" style="min-height:380px;" placeholder="ここに文章を入力、または貼り付けてください…"></textarea>
           <div class="hero-stat">
             <span class="num" id="cnt-hero">0</span>
             <span class="unit">文字</span>
@@ -368,13 +368,13 @@
     </div>
     <div class="panel">
       <div class="tool-body stack">
-        <textarea id="zh-input" style="min-height:160px;" placeholder="変換したい文章を入力してください…"></textarea>
+        <textarea id="zh-input" aria-label="全角⇔半角変換する文章の入力欄" style="min-height:160px;" placeholder="変換したい文章を入力してください…"></textarea>
         <div class="toolbar-group">
           <button class="primary" id="zh-toHalf">全角 → 半角</button>
           <button class="primary" id="zh-toFull">半角 → 全角</button>
           <button class="ghost" id="zh-copy">結果をコピー</button>
         </div>
-        <textarea id="zh-output" class="mono" style="min-height:160px;" placeholder="変換結果がここに表示されます" readonly></textarea>
+        <textarea id="zh-output" class="mono" aria-label="全角⇔半角変換結果の出力欄" style="min-height:160px;" placeholder="変換結果がここに表示されます" readonly></textarea>
       </div>
     </div>
   </section>
@@ -392,12 +392,12 @@
           <button class="seg active" id="kn-mode-toRomaji">かな → ローマ字</button>
           <button class="seg" id="kn-mode-toKana">ローマ字 → かな</button>
         </div>
-        <textarea id="kn-input" style="min-height:140px;" placeholder="変換したい文章を入力してください…"></textarea>
+        <textarea id="kn-input" aria-label="かな⇔ローマ字変換する文章の入力欄" style="min-height:140px;" placeholder="変換したい文章を入力してください…"></textarea>
         <div class="toolbar-group">
           <button class="primary" id="kn-convert">変換する</button>
           <button class="ghost" id="kn-copy">結果をコピー</button>
         </div>
-        <textarea id="kn-output" class="mono" style="min-height:140px;" placeholder="変換結果がここに表示されます" readonly></textarea>
+        <textarea id="kn-output" class="mono" aria-label="かな⇔ローマ字変換結果の出力欄" style="min-height:140px;" placeholder="変換結果がここに表示されます" readonly></textarea>
         <div class="hint" id="kn-hint">拗音・促音・長音（ー）に対応した簡易変換です。</div>
       </div>
     </div>
@@ -412,7 +412,7 @@
     </div>
     <div class="panel">
       <div class="tool-body stack">
-        <textarea id="gk-input" style="min-height:140px;" placeholder="原稿用紙に描画したい文章を入力してください…"></textarea>
+        <textarea id="gk-input" aria-label="原稿用紙に描画する文章の入力欄" style="min-height:140px;" placeholder="原稿用紙に描画したい文章を入力してください…"></textarea>
         <div class="genkou-controls">
           <button class="primary" id="gk-render">原稿用紙に描画する</button>
           <button class="ghost" id="gk-print">印刷する</button>
@@ -437,7 +437,7 @@
     </div>
     <div class="panel">
       <div class="tool-body stack">
-        <textarea id="kj-input" style="min-height:140px;" placeholder="チェックしたい文章を入力してください…"></textarea>
+        <textarea id="kj-input" aria-label="漢字利用チェックする文章の入力欄" style="min-height:140px;" placeholder="チェックしたい文章を入力してください…"></textarea>
         <div class="toolbar-group">
           <button class="primary" id="kj-check">チェックする</button>
         </div>
@@ -485,7 +485,7 @@
     </div>
     <div class="panel">
       <div class="tool-body stack">
-        <textarea id="sm-input" style="min-height:220px;" placeholder="要約したい文章を入力してください…"></textarea>
+        <textarea id="sm-input" aria-label="要約する文章の入力欄" style="min-height:220px;" placeholder="要約したい文章を入力してください…"></textarea>
         <div class="toolbar-group">
           <label class="check" style="gap:8px;">目標文字数
             <input type="number" id="sm-target" value="200" min="10" max="5000" step="10">
@@ -493,7 +493,7 @@
           <button class="primary" id="sm-run">要約する</button>
           <button class="ghost" id="sm-copy">結果をコピー</button>
         </div>
-        <textarea id="sm-output" style="min-height:140px;" placeholder="要約結果がここに表示されます" readonly></textarea>
+        <textarea id="sm-output" aria-label="要約結果の出力欄" style="min-height:140px;" placeholder="要約結果がここに表示されます" readonly></textarea>
         <div class="hint" id="sm-hint"></div>
       </div>
     </div>
