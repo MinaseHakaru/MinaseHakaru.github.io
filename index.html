@@ -367,6 +367,7 @@
           <button class="primary" id="zh-toHalf">全角 → 半角</button>
           <button class="primary" id="zh-toFull">半角 → 全角</button>
           <button class="ghost" id="zh-copy">結果をコピー</button>
+          <button class="ghost" id="zh-reset">リセット</button>
         </div>
         <textarea id="zh-output" class="mono" aria-label="全角⇔半角変換結果の出力欄" style="min-height:160px;" placeholder="変換結果がここに表示されます" readonly></textarea>
       </div>
@@ -390,6 +391,7 @@
         <div class="toolbar-group">
           <button class="primary" id="kn-convert">変換する</button>
           <button class="ghost" id="kn-copy">結果をコピー</button>
+          <button class="ghost" id="kn-reset">リセット</button>
         </div>
         <textarea id="kn-output" class="mono" aria-label="かな⇔ローマ字変換結果の出力欄" style="min-height:140px;" placeholder="変換結果がここに表示されます" readonly></textarea>
         <div class="hint" id="kn-hint">拗音・促音・長音（ー）に対応した簡易変換です。</div>
@@ -402,7 +404,7 @@
     <div class="tool-header">
       <a class="back" href="#/">← 道具帖トップ</a>
       <h2>原稿用紙エディタ</h2>
-      <p class="desc">入力した文章を20×20マス（400字詰め）の原稿用紙に描画します。段落の先頭は1マス字下げされます。</p>
+      <p class="desc">入力した文章を20×20マス（400字詰め）の横書き原稿用紙に描画します。段落の先頭は1マス字下げされます。</p>
     </div>
     <div class="panel">
       <div class="tool-body stack">
@@ -410,6 +412,7 @@
         <div class="genkou-controls">
           <button class="primary" id="gk-render">原稿用紙に描画する</button>
           <button class="ghost" id="gk-print">印刷する</button>
+          <button class="ghost" id="gk-reset">リセット</button>
           <span class="sheet-pager" id="gk-pager" style="display:none;">
             <button class="ghost" id="gk-prev">‹ 前へ</button>
             <span id="gk-pageLabel">1 / 1 枚</span>
@@ -417,7 +420,7 @@
           </span>
         </div>
         <div class="genkou-sheets" id="gk-sheets"></div>
-        <div class="hint">横書き表示の簡易版です。句読点・閉じかっこ類は行頭に来ないよう前の行末のマスにまとめます。</div>
+        <div class="hint">簡易版です。句読点・閉じかっこ類は行頭に来ないよう前の行末のマスにまとめます。</div>
       </div>
     </div>
   </section>
@@ -434,6 +437,7 @@
         <textarea id="kj-input" aria-label="漢字利用チェックする文章の入力欄" style="min-height:140px;" placeholder="チェックしたい文章を入力してください…"></textarea>
         <div class="toolbar-group">
           <button class="primary" id="kj-check">チェックする</button>
+          <button class="ghost" id="kj-reset">リセット</button>
         </div>
       </div>
     </div>
@@ -661,6 +665,7 @@
     document.getElementById('zh-toHalf').addEventListener('click', () => { output.value = toHalfWidth(input.value); });
     document.getElementById('zh-toFull').addEventListener('click', () => { output.value = toFullWidth(input.value); });
     document.getElementById('zh-copy').addEventListener('click', () => copyText(output.value));
+    document.getElementById('zh-reset').addEventListener('click', () => { input.value = ''; output.value = ''; input.focus(); });
   })();
 
   /* ===================== かな⇔ローマ字 ===================== */
@@ -774,6 +779,7 @@
       output.value = mode === 'toRomaji' ? kanaToRomaji(input.value) : romajiToKana(input.value);
     });
     document.getElementById('kn-copy').addEventListener('click', () => copyText(output.value));
+    document.getElementById('kn-reset').addEventListener('click', () => { input.value = ''; output.value = ''; input.focus(); });
     setMode('toRomaji');
   })();
 
@@ -836,6 +842,15 @@
     prevBtn.addEventListener('click', () => { if (currentPage > 0) showPage(currentPage - 1); });
     nextBtn.addEventListener('click', () => { if (currentPage < totalSheets - 1) showPage(currentPage + 1); });
     printBtn.addEventListener('click', () => window.print());
+    document.getElementById('gk-reset').addEventListener('click', () => {
+      input.value = '';
+      sheetsEl.innerHTML = '';
+      pager.style.display = 'none';
+      pageLabel.textContent = '1 / 1 枚';
+      currentPage = 0;
+      totalSheets = 1;
+      input.focus();
+    });
   })();
 
   /* ===================== 漢字利用チェック ===================== */
@@ -894,6 +909,16 @@
       resultsEl.hidden = false;
     }
     checkBtn.addEventListener('click', check);
+    document.getElementById('kj-reset').addEventListener('click', () => {
+      input.value = '';
+      resultsEl.hidden = true;
+      highlighted.innerHTML = '';
+      breakdownEl.innerHTML = '';
+      maxGradeEl.textContent = '-';
+      totalEl.innerHTML = '0<span class="u">字</span>';
+      otherEl.innerHTML = '0<span class="u">字</span>';
+      input.focus();
+    });
   })();
 
 })();
