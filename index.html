@@ -178,6 +178,28 @@
   .layout-2col{ display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
   @media (max-width: 860px){ .layout-2col{ grid-template-columns: 1fr; } }
 
+  /* ---- ratio tool ---- */
+  .rt-guide{ font-size: 0.85rem; color: var(--ink-soft); margin: 0; }
+  .rt-inputs{ display: flex; align-items: flex-end; gap: 18px; }
+  .rt-field{ display: flex; flex-direction: column; gap: 6px; }
+  .rt-field label{ font-size: 0.78rem; color: var(--ink-soft); }
+  .rt-field input[type="number"]{ width: 130px; font-size: 1.05rem; padding: 9px 12px; }
+  .rt-arrow{ font-size: 1.4rem; color: var(--ink-faint); padding-bottom: 10px; }
+  @media (max-width: 520px){
+    .rt-inputs{ flex-direction: column; align-items: stretch; gap: 12px; }
+    .rt-arrow{ align-self: center; transform: rotate(90deg); padding-bottom: 0; }
+  }
+  .rt-grid{ grid-template-columns: repeat(3, 1fr); }
+  .rt-grid .stat-tile{ padding: 10px; }
+  .rt-grid .stat-tile .val{ font-size: 1.05rem; }
+  .rt-dash{ color: var(--ink-faint); font-weight: 400; }
+  .rt-note{ font-size: 0.82rem; color: var(--ink-soft); margin: 0; }
+  .rt-sentence{
+    position: relative; background: var(--surface-sunken); border: 1px solid var(--line);
+    border-radius: 8px; padding: 16px 96px 16px 18px; font-size: 0.95rem; line-height: 1.7; margin: 0;
+  }
+  .rt-sentence .copy-inline{ position: absolute; top: 10px; right: 10px; font-size: 0.74rem; padding: 4px 10px; }
+
   /* ---- genkou ---- */
   .genkou-controls{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
   .sheet-pager{ display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--ink-soft); }
@@ -248,6 +270,7 @@
       <a href="#/kana" data-route="kana">かな⇔ローマ字</a>
       <a href="#/genkou" data-route="genkou">原稿用紙</a>
       <a href="#/kanji" data-route="kanji">漢字利用チェック</a>
+      <a href="#/ratio" data-route="ratio">割合・増減率</a>
     </nav>
   </div>
 </header>
@@ -285,6 +308,11 @@
         <span class="icon">漢</span>
         <h3>漢字利用チェック</h3>
         <p>使われている漢字が小学校の何年生で習うかを判定します。</p>
+      </a>
+      <a class="tool-card" href="#/ratio">
+        <span class="icon">率</span>
+        <h3>割合・増減率</h3>
+        <p>二つの数を入力すると、差・増減率・倍率を測り、文章にまとめます。</p>
       </a>
     </div>
   </section>
@@ -474,6 +502,46 @@
     </div>
   </section>
 
+  <!-- ===== 割合・増減率 ===== -->
+  <section class="view" id="view-ratio">
+    <div class="tool-header">
+      <a class="back" href="#/">← 道具帖トップ</a>
+      <h2>割合・増減率</h2>
+      <p class="desc">二つの数を入力すると、その関係を差・増減率・倍率で測り、文章にまとめます。</p>
+    </div>
+    <div class="panel">
+      <div class="tool-body stack">
+        <p class="rt-guide">左の数を基準に、右の数との関係を測ります。</p>
+        <div class="rt-inputs">
+          <div class="rt-field">
+            <label for="rt-a">基準の数</label>
+            <input type="number" id="rt-a" aria-label="基準の数の入力欄" inputmode="decimal" placeholder="120">
+          </div>
+          <div class="rt-arrow" aria-hidden="true">→</div>
+          <div class="rt-field">
+            <label for="rt-b">比べる数</label>
+            <input type="number" id="rt-b" aria-label="比べる数の入力欄" inputmode="decimal" placeholder="150">
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" id="rt-percent"> この数値は％です</label>
+        <div class="toolbar-group">
+          <button class="ghost" id="rt-reset">リセット</button>
+        </div>
+        <div id="rt-results" hidden>
+          <div class="stat-grid rt-grid">
+            <div class="stat-tile"><div class="val" id="rt-diff">—</div><div class="lbl" id="rt-diff-lbl">差</div></div>
+            <div class="stat-tile"><div class="val" id="rt-pct">—</div><div class="lbl">増減率</div></div>
+            <div class="stat-tile"><div class="val" id="rt-ratio">—</div><div class="lbl">倍率</div></div>
+          </div>
+          <p class="rt-note" id="rt-note" hidden></p>
+          <div class="rt-sentence" id="rt-sentence-box">
+            <button class="ghost copy-inline" id="rt-copy" aria-label="結果の文章をコピー">コピー</button>
+            <span id="rt-sentence"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
 </div>
 
@@ -548,7 +616,7 @@
   }
 
   /* ===================== router ===================== */
-  const VIEWS = ['cover','count','zenhan','kana','genkou','kanji'];
+  const VIEWS = ['cover','count','zenhan','kana','genkou','kanji','ratio'];
   function currentRoute(){
     const h = location.hash.replace(/^#\/?/, '');
     return VIEWS.includes(h) ? h : 'cover';
@@ -918,6 +986,116 @@
       totalEl.innerHTML = '0<span class="u">字</span>';
       otherEl.innerHTML = '0<span class="u">字</span>';
       input.focus();
+    });
+  })();
+
+  /* ===================== 割合・増減率 ===================== */
+  (function initRatio(){
+    const aInput = document.getElementById('rt-a');
+    const bInput = document.getElementById('rt-b');
+    const percentCheck = document.getElementById('rt-percent');
+    const resultsEl = document.getElementById('rt-results');
+    const diffEl = document.getElementById('rt-diff');
+    const diffLbl = document.getElementById('rt-diff-lbl');
+    const pctEl = document.getElementById('rt-pct');
+    const ratioEl = document.getElementById('rt-ratio');
+    const noteEl = document.getElementById('rt-note');
+    const sentenceEl = document.getElementById('rt-sentence');
+    const resetBtn = document.getElementById('rt-reset');
+    const copyBtn = document.getElementById('rt-copy');
+
+    const MINUS = '−';
+
+    function decimalsOf(str){
+      const i = str.indexOf('.');
+      return i === -1 ? 0 : (str.length - i - 1);
+    }
+    function formatSigned(n, decimals){
+      if (n === 0) return (0).toFixed(decimals);
+      const sign = n > 0 ? '+' : MINUS;
+      return sign + Math.abs(n).toFixed(decimals);
+    }
+    function formatPlain(n, decimals){
+      const scale = Math.pow(10, decimals);
+      const rounded = Math.sign(n) * Math.round(Math.abs(n) * scale) / scale;
+      const str = String(rounded);
+      return rounded < 0 ? MINUS + str.slice(1) : str;
+    }
+    function setDash(el){
+      el.innerHTML = '';
+      const span = document.createElement('span');
+      span.className = 'rt-dash';
+      span.textContent = '—';
+      el.appendChild(span);
+    }
+
+    function render(){
+      const aStr = aInput.value.trim();
+      const bStr = bInput.value.trim();
+      const a = Number(aStr);
+      const b = Number(bStr);
+      const valid = aStr !== '' && bStr !== '' && Number.isFinite(a) && Number.isFinite(b);
+      if (!valid){
+        resultsEl.hidden = true;
+        return;
+      }
+      const percentMode = percentCheck.checked;
+
+      const decimals = Math.max(decimalsOf(aStr), decimalsOf(bStr));
+      const scale = Math.pow(10, decimals);
+      const diff = (Math.round(b * scale) - Math.round(a * scale)) / scale;
+      const diffText = formatSigned(diff, decimals) + (percentMode ? 'ポイント' : '');
+
+      const showPct = a > 0;
+      const showRatio = a > 0 && b >= 0;
+      const pct = showPct ? (b - a) / a * 100 : null;
+      const ratio = showRatio ? b / a : null;
+
+      diffLbl.textContent = percentMode ? 'ポイント差' : '差';
+      diffEl.textContent = diffText;
+
+      if (showPct){ pctEl.textContent = formatPlain(pct, 1) + '%'; }
+      else { setDash(pctEl); }
+
+      if (showRatio){ ratioEl.textContent = formatPlain(ratio, 2) + '倍'; }
+      else { setDash(ratioEl); }
+
+      let note = '';
+      let reason = '';
+      if (a === 0){
+        note = '基準となる値が0のため、増減率と倍率は算出できません。';
+        reason = '基準が0のため、増減率と倍率は表示していません。';
+      } else if (a < 0){
+        note = '基準となる値が負のため、増減率と倍率は誤読を招くため表示していません。';
+        reason = '基準が負のため、増減率と倍率は表示していません。';
+      } else if (b < 0){
+        note = '値が正から負へまたいでいるため、倍率は誤読を招くため表示していません。';
+        reason = '値が正から負へまたいでいるため、倍率は表示していません。';
+      }
+      noteEl.textContent = note;
+      noteEl.hidden = !note;
+
+      const unit = percentMode ? '%' : '';
+      const clauses = [`差は${diffText}`];
+      if (showPct) clauses.push(`増減率は${formatPlain(pct, 1)}%`);
+      if (showRatio) clauses.push(`元の${formatPlain(ratio, 2)}倍`);
+      const aDisp = aStr.replace(/^-/, MINUS) + unit;
+      const bDisp = bStr.replace(/^-/, MINUS) + unit;
+      sentenceEl.textContent = `${aDisp}から${bDisp}へ。${clauses.join('、')}です。${reason}`;
+
+      resultsEl.hidden = false;
+    }
+
+    aInput.addEventListener('input', render);
+    bInput.addEventListener('input', render);
+    percentCheck.addEventListener('change', render);
+    copyBtn.addEventListener('click', () => copyText(sentenceEl.textContent));
+    resetBtn.addEventListener('click', () => {
+      aInput.value = '';
+      bInput.value = '';
+      percentCheck.checked = false;
+      render();
+      aInput.focus();
     });
   })();
 
