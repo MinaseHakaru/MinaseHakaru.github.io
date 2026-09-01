@@ -193,7 +193,11 @@
   .rt-grid .stat-tile{ padding: 10px; }
   .rt-grid .stat-tile .val{ font-size: 1.05rem; }
   .rt-dash{ color: var(--ink-faint); font-weight: 400; }
-  .rt-note{ font-size: 0.82rem; color: var(--ink-soft); margin: 0; }
+  .rt-note{ font-size: 0.82rem; color: var(--ink-soft); margin: 16px 0 0; }
+  .rt-sentence-label{
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 10px 0 6px;
+  }
   .rt-sentence{
     position: relative; background: var(--surface-sunken); border: 1px solid var(--line);
     border-radius: 8px; padding: 16px 96px 16px 18px; font-size: 0.95rem; line-height: 1.7; margin: 0;
@@ -270,7 +274,7 @@
       <a href="#/kana" data-route="kana">かな⇔ローマ字</a>
       <a href="#/genkou" data-route="genkou">原稿用紙</a>
       <a href="#/kanji" data-route="kanji">漢字利用チェック</a>
-      <a href="#/ratio" data-route="ratio">割合・増減率</a>
+      <a href="#/ratio" data-route="ratio">数くらべ</a>
     </nav>
   </div>
 </header>
@@ -311,8 +315,8 @@
       </a>
       <a class="tool-card" href="#/ratio">
         <span class="icon">率</span>
-        <h3>割合・増減率</h3>
-        <p>二つの数を入力すると、差・増減率・倍率を測り、文章にまとめます。</p>
+        <h3>数くらべ</h3>
+        <p>二つの数を、差・増減率・倍率で比べ、文章にまとめます。</p>
       </a>
     </div>
   </section>
@@ -502,11 +506,11 @@
     </div>
   </section>
 
-  <!-- ===== 割合・増減率 ===== -->
+  <!-- ===== 数くらべ ===== -->
   <section class="view" id="view-ratio">
     <div class="tool-header">
       <a class="back" href="#/">← 道具帖トップ</a>
-      <h2>割合・増減率</h2>
+      <h2>数くらべ</h2>
       <p class="desc">二つの数を入力すると、その関係を差・増減率・倍率で測り、文章にまとめます。</p>
     </div>
     <div class="panel">
@@ -534,6 +538,7 @@
             <div class="stat-tile"><div class="val" id="rt-ratio">—</div><div class="lbl">倍率</div></div>
           </div>
           <p class="rt-note" id="rt-note" hidden></p>
+          <div class="rt-sentence-label">文章にすると</div>
           <div class="rt-sentence" id="rt-sentence-box">
             <button class="ghost copy-inline" id="rt-copy" aria-label="結果の文章をコピー">コピー</button>
             <span id="rt-sentence"></span>
@@ -989,7 +994,7 @@
     });
   })();
 
-  /* ===================== 割合・増減率 ===================== */
+  /* ===================== 数くらべ ===================== */
   (function initRatio(){
     const aInput = document.getElementById('rt-a');
     const bInput = document.getElementById('rt-b');

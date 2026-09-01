@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A collection of small, self-contained Japanese-language web tools published as single HTML files (Claude Artifacts and/or opened directly via `file://`). No build system, no package manager, no test suite — each tool is one `.html` file with inline `<style>` and `<script>`, no dependencies beyond a Google Fonts stylesheet link.
 
 Current files:
-- `index.html` — "文章づくり道具帖", a multi-tool suite (hash-router SPA) covering: 文字数カウント, 全角⇔半角変換, かな⇔ローマ字変換, 原稿用紙エディタ, 漢字利用チェック.
+- `index.html` — "文章づくり道具帖", a multi-tool suite (hash-router SPA) covering: 文字数カウント, 全角⇔半角変換, かな⇔ローマ字変換, 原稿用紙エディタ, 漢字利用チェック, 数くらべ.
 
 ## Working with this codebase
 
@@ -21,7 +21,7 @@ There is no build/lint/test tooling. To develop:
 
 **Single-file convention.** Each tool ships as one `.html` file with everything inlined: CSS in a `<style>` block, JS in a `<script>` block at the end of `<body>`, and any static data (e.g. the kanji-grade table) as inline JS constants — never a separate fetched JSON/CSV. The only external network request permitted is the Google Fonts stylesheet link; nothing else may be fetched, and no user input is ever sent anywhere. Describe this to users as "入力文章は送信されません" (input text is never sent), not "完全にローカルで動作" (fully offline) — the Google Fonts request is real network activity, so the stronger claim is inaccurate.
 
-**Multi-tool suites use hash routing, not multi-page.** `index.html` shows/hides `<section class="view" id="view-*">` blocks based on `location.hash` (`#/count`, `#/zenhan`, `#/kana`, `#/genkou`, `#/kanji`), toggled via a `.view.active` class in `renderRoute()`. Each tool's init logic is wrapped in its own IIFE and queries only its own element IDs, prefixed per tool (`cnt-`, `zh-`, `kn-`, `gk-`, `kj-`). Tools intentionally do not share input state with each other — each has its own `<textarea>` — mirroring how these tools exist as separate pages on the reference site this suite was modeled after.
+**Multi-tool suites use hash routing, not multi-page.** `index.html` shows/hides `<section class="view" id="view-*">` blocks based on `location.hash` (`#/count`, `#/zenhan`, `#/kana`, `#/genkou`, `#/kanji`, `#/ratio`), toggled via a `.view.active` class in `renderRoute()`. Each tool's init logic is wrapped in its own IIFE and queries only its own element IDs, prefixed per tool (`cnt-`, `zh-`, `kn-`, `gk-`, `kj-`, `rt-`). Tools intentionally do not share input state with each other — each has its own input fields (a `<textarea>` for the text tools, number inputs for 数くらべ) — mirroring how these tools exist as separate pages on the reference site this suite was modeled after. Note that 数くらべ's hash (`#/ratio`) and element-id prefix (`rt-`) intentionally don't match its display name — they predate a rename from "割合・増減率" and were kept stable to avoid breaking links/bookmarks.
 
 **Design tokens** are CSS custom properties on `:root`, redefined for dark mode via `@media (prefers-color-scheme: dark)` guarded with `:root:not([data-theme="light"])`, and again under `:root[data-theme="dark"]` for an explicit override (there is no theme-toggle UI yet — theme currently follows the OS only). Reuse these exact values for new tools rather than inventing a new palette:
 
