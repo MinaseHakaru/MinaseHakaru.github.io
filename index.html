@@ -80,6 +80,19 @@
   nav.tool-links a:hover{ background: var(--surface-sunken); color: var(--ink); }
   nav.tool-links a.active{ background: var(--accent-soft); color: var(--accent-strong); font-weight: 500; }
 
+  /* Mobile: keep the brand on its own line, and let the tool nav scroll
+     horizontally on one line instead of wrapping (interim fix scoped to
+     narrow widths only, ahead of the real nav redesign in ROADMAP §4 6番目). */
+  @media (max-width: 640px){
+    .nav-inner{ flex-direction: column; align-items: stretch; gap: 10px; flex-wrap: nowrap; }
+    nav.tool-links{
+      flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; width: 100%;
+    }
+    nav.tool-links::-webkit-scrollbar{ display: none; }
+    nav.tool-links a{ flex: none; white-space: nowrap; }
+  }
+
   section.view{ display: none; padding-top: 32px; }
   section.view.active{ display: block; }
 
@@ -638,9 +651,19 @@
       const el = document.getElementById('view-' + v);
       if (el) el.classList.toggle('active', v === route);
     });
+    let activeLink = null;
     document.querySelectorAll('.tool-links a').forEach(a => {
-      a.classList.toggle('active', a.dataset.route === route);
+      const isActive = a.dataset.route === route;
+      a.classList.toggle('active', isActive);
+      if (isActive) activeLink = a;
     });
+    const navEl = document.querySelector('nav.tool-links');
+    if (activeLink && navEl){
+      const navRect = navEl.getBoundingClientRect();
+      const linkRect = activeLink.getBoundingClientRect();
+      if (linkRect.left < navRect.left) navEl.scrollLeft -= (navRect.left - linkRect.left) + 12;
+      else if (linkRect.right > navRect.right) navEl.scrollLeft += (linkRect.right - navRect.right) + 12;
+    }
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', renderRoute);
