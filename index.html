@@ -217,7 +217,7 @@
   }
   .rt-sentence .copy-inline{ position: absolute; top: 10px; right: 10px; font-size: 0.74rem; padding: 4px 10px; }
 
-  /* ---- genkou ---- */
+  /* ---- genkou (vertical writing) ---- */
   .genkou-controls{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
   .sheet-pager{ display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--ink-soft); }
   .sheet-pager .page-input{
@@ -227,18 +227,49 @@
   .genkou-sheet{ display: none; }
   .genkou-sheet.active{ display: block; }
   .genkou-sheet .sheet-label{ font-size: 0.74rem; color: var(--ink-faint); margin-bottom: 6px; }
+  .gk-hint{ display: none; font-size: 0.78rem; color: var(--ink-soft); margin: 0 0 8px; }
+  @media (max-width: 640px){
+    .gk-hint{ display: block; }
+  }
+  /* Horizontal-scroll viewport for one sheet. direction:rtl makes scrollLeft:0
+     land on the RIGHT edge (where column 1 / the first character is), matching
+     tategaki reading order, and lets the grid keep a 400px floor width without
+     the page itself gaining a vertical scrollbar. */
+  .gk-scroll{
+    overflow-x: auto; overflow-y: hidden;
+    direction: rtl;
+    max-width: 100%;
+  }
   .gk-grid{
     display: grid; grid-template-columns: repeat(20, 1fr); grid-template-rows: repeat(20, 1fr);
-    border-left: 1px solid var(--line-strong); border-top: 1px solid var(--line-strong);
-    background: var(--surface); aspect-ratio: 1; max-width: 640px;
+    grid-auto-flow: column;
+    border-top: 1px solid var(--line-strong); border-right: 1px solid var(--line-strong);
+    background: var(--surface); aspect-ratio: 1;
+    width: 100%; min-width: 400px; max-width: 640px;
   }
   .gk-cell{
-    position: relative; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    position: relative; direction: ltr;
+    border-left: 1px solid var(--line); border-bottom: 1px solid var(--line);
     display: flex; align-items: center; justify-content: center;
-    font-family: "Shippori Mincho", serif; font-size: clamp(7px, 1.55vw, 15px); color: var(--ink);
+    font-family: "Shippori Mincho", serif; font-size: clamp(9px, 1.55vw, 15px); color: var(--ink);
   }
+  .gk-cell .glyph{ writing-mode: vertical-rl; }
+  /* 、。 and small kana (っゃゅょぁぃぅぇぉ): tucked into the upper-right of the cell */
+  .gk-cell.gk-corner .glyph{
+    writing-mode: horizontal-tb;
+    display: flex; align-items: flex-start; justify-content: flex-end;
+    position: absolute; inset: 4% 4% auto auto;
+    font-size: 0.6em; line-height: 1;
+  }
+  /* ー and — : forced into a vertical stroke regardless of font vertical-glyph support */
+  .gk-cell.gk-rotate .glyph{
+    writing-mode: horizontal-tb; display: inline-block; transform: rotate(90deg);
+  }
+  /* ？！: stay upright, centered, unrotated */
+  .gk-cell.gk-upright .glyph{ writing-mode: horizontal-tb; }
   .gk-cell .trail{
-    position: absolute; right: 1px; bottom: 0px; font-size: 0.62em; color: var(--ink-soft); line-height: 1;
+    position: absolute; right: 4%; bottom: 2%; font-size: 0.55em; color: var(--ink-soft);
+    line-height: 1; writing-mode: horizontal-tb;
   }
 
   /* ---- kanji check ---- */
@@ -271,11 +302,13 @@
   @media (prefers-reduced-motion: reduce){ *{ transition: none !important; } }
 
   @media print{
+    @page{ size: A4 portrait; margin: 14mm; }
     header.site-nav, .cover-hero, .card-grid, .tool-header, .toolbar, footer.site-footer,
-    .layout-2col > aside, .genkou-controls, textarea, .hint{ display: none !important; }
+    .layout-2col > aside, .genkou-controls, textarea, .hint, .gk-hint{ display: none !important; }
     body{ background: #fff; }
     .genkou-sheet{ display: block !important; page-break-after: always; }
-    .gk-grid{ max-width: 100%; }
+    .gk-scroll{ overflow: visible !important; max-width: none; }
+    .gk-grid{ width: auto; min-width: 0; max-width: 100%; margin: 0 auto; }
   }
 </style>
 </head>
@@ -452,7 +485,7 @@
     <div class="tool-header">
       <a class="back" href="#/">← 道具帖トップ</a>
       <h2>原稿用紙エディタ</h2>
-      <p class="desc">入力した文章を20×20マス（400字詰め）の横書き原稿用紙に描画します。段落の先頭は1マス字下げされます。</p>
+      <p class="desc">入力した文章を20×20マス（400字詰め）の縦書き原稿用紙に描画します。段落の先頭は1マス字下げされます。</p>
     </div>
     <div class="panel">
       <div class="tool-body stack">
@@ -593,7 +626,12 @@
     return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  /* ===================== 原稿用紙レイアウト (共有) ===================== */
+  /* ===================== 原稿用紙レイアウト (共有) =====================
+     layoutGenkou() is writing-direction-agnostic: it only tracks position
+     within a 20-cell "line" and hands back a flat per-sheet cell array.
+     For 縦書き, each "line" is rendered as one column (top-to-bottom), so
+     head-of-line kinsoku here is head-of-column, and tail-of-line kinsoku
+     is tail-of-column — the same algorithm serves both without change. */
   const KINSOKU_HEAD_FORBID = new Set(['。','、','，','．','）','」','』','】','〉','》','・','！','？','ー','々','ゝ','ゞ','ぁ','ぃ','ぅ','ぇ','ぉ','ゃ','ゅ','ょ','っ',')',']','}',',','.']);
   const GENKOU_OPEN_BRACKETS = new Set(['「','『','（','〈','《','【','［']);
   const GENKOU_COLS = 20, GENKOU_ROWS = 20, GENKOU_PER_SHEET = GENKOU_COLS * GENKOU_ROWS;
@@ -617,6 +655,11 @@
       if (col === 0 && KINSOKU_HEAD_FORBID.has(ch) && lastCell && lastCell.main && !lastCell.trail){
         lastCell.trail = ch;
         return;
+      }
+      // Tail-of-line kinsoku: don't let an opening bracket sit alone as the
+      // last cell of a line — pad the line and push it to the next one.
+      if (col === GENKOU_COLS - 1 && GENKOU_OPEN_BRACKETS.has(ch)){
+        placeBlank();
       }
       newSheetIfNeeded();
       const cell = {main: ch, trail: null};
@@ -899,6 +942,17 @@
     const nextBtn = document.getElementById('gk-next');
     const lastBtn = document.getElementById('gk-last');
 
+    // Glyph categories for correct 縦書き appearance (see CLAUDE.md).
+    const GK_CORNER = new Set(['、','。','っ','ゃ','ゅ','ょ','ぁ','ぃ','ぅ','ぇ','ぉ']);
+    const GK_ROTATE = new Set(['ー','—']);
+    const GK_UPRIGHT = new Set(['？','！']);
+    function classifyGlyph(ch){
+      if (GK_CORNER.has(ch)) return 'gk-corner';
+      if (GK_ROTATE.has(ch)) return 'gk-rotate';
+      if (GK_UPRIGHT.has(ch)) return 'gk-upright';
+      return '';
+    }
+
     let currentPage = 0, totalSheets = 1;
     function showPage(idx){
       const sheetEls = sheetsEl.querySelectorAll('.genkou-sheet');
@@ -910,6 +964,11 @@
       prevBtn.disabled = idx === 0;
       nextBtn.disabled = idx === totalSheets - 1;
       lastBtn.disabled = idx === totalSheets - 1;
+      // Always land on the right edge (column 1) of the newly-shown sheet,
+      // even if it was scrolled left on a previous visit.
+      const activeSheet = sheetEls[idx];
+      const scrollEl = activeSheet && activeSheet.querySelector('.gk-scroll');
+      if (scrollEl) scrollEl.scrollLeft = 0;
     }
     function commitPageInput(){
       const n = parseInt(pageInput.value, 10);
@@ -932,13 +991,25 @@
         const label = document.createElement('div');
         label.className = 'sheet-label';
         label.textContent = `${sIdx+1}枚目 / 全${totalSheets}枚`;
+        const hint = document.createElement('div');
+        hint.className = 'gk-hint';
+        hint.textContent = '横にスクロールすると続きが見られます。';
+        const scrollWrap = document.createElement('div');
+        scrollWrap.className = 'gk-scroll';
         const grid = document.createElement('div');
         grid.className = 'gk-grid';
         for (let i = 0; i < GENKOU_PER_SHEET; i++){
           const cellData = sheet[i] || {main:null, trail:null};
           const cell = document.createElement('div');
           cell.className = 'gk-cell';
-          if (cellData.main) cell.textContent = cellData.main;
+          if (cellData.main){
+            const glyph = document.createElement('span');
+            glyph.className = 'glyph';
+            glyph.textContent = cellData.main;
+            const cat = classifyGlyph(cellData.main);
+            if (cat) cell.classList.add(cat);
+            cell.appendChild(glyph);
+          }
           if (cellData.trail){
             const trail = document.createElement('span');
             trail.className = 'trail';
@@ -947,8 +1018,10 @@
           }
           grid.appendChild(cell);
         }
+        scrollWrap.appendChild(grid);
         wrap.appendChild(label);
-        wrap.appendChild(grid);
+        wrap.appendChild(hint);
+        wrap.appendChild(scrollWrap);
         sheetsEl.appendChild(wrap);
       });
       pager.style.display = totalSheets > 1 ? 'inline-flex' : 'none';

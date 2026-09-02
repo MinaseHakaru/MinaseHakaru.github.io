@@ -37,6 +37,15 @@ Typography: **Shippori Mincho** (serif — branding mark, tool titles), **Zen Ka
 
 **Router gap:** `document.title` is never updated on `hashchange` in `renderRoute()` — every view shows the same browser-tab title. Update it there if per-view titles become important (tab disambiguation, SEO on a future multi-page split).
 
+## 原稿用紙エディタ (縦書き)
+
+原稿用紙エディタは縦書き専用。横書きモードは廃止済みで、切り替え機能は設けていない(参考にしたサイトが縦書きだったため、横書きは実装時に落ちた未達仕様だった経緯はROADMAP.mdを参照)。
+
+- `layoutGenkou()` は書字方向に依存しない。「20マスの行」内の位置(`col`)としてしか位置を追跡せず、シートごとのフラットな `{main, trail}` セル配列を返すだけなので、横書き・縦書きどちらの描画にも同じ関数をそのまま使える。縦書きでは「行頭」=列の最上部、「行末」=列の最下部として同じ禁則ロジック(`KINSOKU_HEAD_FORBID` の行頭ぶら下げ、開きかっこの行末禁則による改行送り)が働く。
+- 描画(`initGenkou()` の `render()`)は `.gk-grid` に `grid-auto-flow: column` を使い、`layoutGenkou()` が返すフラット配列をそのままDOM出現順で流し込むだけで列優先(上→下→次の列)の配置になる。列の並び順(1列目が右)は `.gk-scroll`(`.gk-grid` の親)に `direction: rtl` を掛けることで実現しており、同時にこれにより `scrollLeft = 0` が「右端(1列目が見える位置)」を意味するようになる — 初期表示・ページ送り時に右端へ戻す処理は単に `scrollLeft = 0` を代入するだけでよい。
+- 用紙(`.gk-grid`)は `width:100%; min-width:400px; max-width:640px; aspect-ratio:1;` でマスサイズ20〜32pxの範囲に収まるようレスポンシブに拡縮する。`.gk-scroll` が `overflow-x:auto` を持つため、コンテナ幅が400px未満になっても用紙自体は縮まず、横スクロールで対応する(ページ全体の縦スクロールには影響しない)。
+- 約物の見た目は文字ごとに分類してCSSクラスを振ることで制御している(`classifyGlyph()`)。`gk-corner`(読点・句点・小書き仮名 → マス右上に小さく配置)、`gk-rotate`(長音符ー・ダッシュ— → `writing-mode:horizontal-tb` + `transform:rotate(90deg)` で強制的に縦線化)、`gk-upright`(？！ → `writing-mode:horizontal-tb` のみで回転させない)。開きかっこ類は明示クラスを持たせず、`writing-mode:vertical-rl` のデフォルトの縦書きグリフ変形に委ねている。
+
 ## Kanji-grade data (漢字利用チェック)
 
 `KYOIKU_KANJI` (grades 1–6, 1026 characters total) was scraped from Japanese Wikipedia's 学年別漢字配当表 article and verified before embedding: exact per-grade counts (80/160/200/202/193/191), all 1026 characters unique, no duplicates. If this table is ever regenerated, re-verify those counts the same way rather than trusting a fresh scrape blindly.
