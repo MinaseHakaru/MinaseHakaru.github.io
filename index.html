@@ -306,9 +306,23 @@
     header.site-nav, .cover-hero, .card-grid, .tool-header, .toolbar, footer.site-footer,
     .layout-2col > aside, .genkou-controls, textarea, .hint, .gk-hint{ display: none !important; }
     body{ background: #fff; }
-    .genkou-sheet{ display: block !important; page-break-after: always; }
+    /* Strip the chrome (page padding, panel border/shadow, body padding)
+       that was eating into the printable width, and drop the flex layout
+       on .genkou-sheets — print engines don't reliably honor break-*
+       properties on flex children, only on plain block boxes. */
+    .wrap{ max-width: none; margin: 0; padding: 0; }
+    #view-genkou .panel{ border: none; box-shadow: none; border-radius: 0; }
+    #view-genkou .tool-body{ padding: 0; }
+    .genkou-sheets{ display: block !important; gap: 0; }
+    .genkou-sheet{
+      display: block !important;
+      break-inside: avoid; page-break-inside: avoid;
+    }
+    .genkou-sheet:not(:last-child){
+      break-after: page; page-break-after: always;
+    }
     .gk-scroll{ overflow: visible !important; max-width: none; }
-    .gk-grid{ width: auto; min-width: 0; max-width: 100%; margin: 0 auto; }
+    .gk-grid{ width: 100%; min-width: 0; max-width: 100%; margin: 0 auto; }
   }
 </style>
 </head>
