@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>文章づくり道具帖</title>
+<title>道具帖</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
@@ -103,6 +103,12 @@
     margin: 0 0 10px; text-wrap: balance;
   }
   .cover-hero p{ color: var(--ink-soft); max-width: 56ch; margin: 0; }
+  .cover-group{ margin-bottom: 28px; }
+  .cover-group:last-child{ margin-bottom: 0; }
+  .cover-group-heading{
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 0 0 10px;
+  }
   .card-grid{
     display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;
   }
@@ -125,6 +131,7 @@
   .tool-header{ margin-bottom: 20px; }
   .tool-header .back{ font-size: 0.78rem; color: var(--ink-faint); text-decoration: none; }
   .tool-header .back:hover{ color: var(--accent-strong); }
+  .tool-header .category{ font-size: 0.76rem; color: var(--ink-faint); margin: 6px 0 0; }
   .tool-header h2{ font-family: "Shippori Mincho", serif; font-size: 1.5rem; margin: 6px 0 4px; }
   .tool-header .desc{ color: var(--ink-soft); font-size: 0.88rem; margin: 0; }
 
@@ -298,6 +305,8 @@
   .toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
 
   footer.site-footer{ text-align: center; color: var(--ink-faint); font-size: 0.74rem; padding: 40px 0 10px; }
+  footer.site-footer p{ margin: 0 0 4px; }
+  footer.site-footer p:last-child{ margin-bottom: 0; }
 
   @media (prefers-reduced-motion: reduce){ *{ transition: none !important; } }
 
@@ -330,7 +339,7 @@
 
 <header class="site-nav">
   <div class="nav-inner">
-    <a class="brand-link" href="#/"><span class="mark">帖</span><span class="name">文章づくり道具帖</span></a>
+    <a class="brand-link" href="#/"><span class="mark">帖</span><span class="name">道具帖</span></a>
     <nav class="tool-links">
       <a href="#/count" data-route="count">文字数カウント</a>
       <a href="#/zenhan" data-route="zenhan">全角⇔半角</a>
@@ -347,47 +356,57 @@
   <!-- ===== COVER ===== -->
   <section class="view" id="view-cover">
     <div class="cover-hero">
-      <h1>文章づくり道具帖</h1>
-      <p>文章を書くときに便利な小さなツールを集めました。インストール不要・ブラウザだけで動作し、入力内容はどこにも送信されません。</p>
+      <h1>道具帖</h1>
+      <p>文章、数字、時間を、少し見通しよくするための小さな道具集。インストール不要・ブラウザだけで動作し、入力内容はどこにも送信されません。</p>
     </div>
-    <div class="card-grid">
-      <a class="tool-card" href="#/count">
-        <span class="icon">文</span>
-        <h3>文字数カウント</h3>
-        <p>文字数・行数・バイト数・読了時間をリアルタイムに計算します。</p>
-      </a>
-      <a class="tool-card" href="#/zenhan">
-        <span class="icon">⇔</span>
-        <h3>全角⇔半角変換</h3>
-        <p>英数字・記号・スペースをワンクリックで一括変換します。</p>
-      </a>
-      <a class="tool-card" href="#/kana">
-        <span class="icon">変</span>
-        <h3>かな⇔ローマ字変換</h3>
-        <p>ひらがな・カタカナとローマ字を双方向に変換します。</p>
-      </a>
-      <a class="tool-card" href="#/genkou">
-        <span class="icon">稿</span>
-        <h3>原稿用紙エディタ</h3>
-        <p>文章を20×20マスの原稿用紙に描画し、印刷もできます。</p>
-      </a>
-      <a class="tool-card" href="#/kanji">
-        <span class="icon">漢</span>
-        <h3>漢字利用チェック</h3>
-        <p>使われている漢字が小学校の何年生で習うかを判定します。</p>
-      </a>
-      <a class="tool-card" href="#/ratio">
-        <span class="icon">率</span>
-        <h3>数くらべ</h3>
-        <p>二つの数を、差・増減率・倍率で比べ、文章にまとめます。</p>
-      </a>
+    <div class="cover-group">
+      <h2 class="cover-group-heading">文章づくり道具帖</h2>
+      <div class="card-grid">
+        <a class="tool-card" href="#/count">
+          <span class="icon">文</span>
+          <h3>文字数カウント</h3>
+          <p>文字数・行数・バイト数・読了時間をリアルタイムに計算します。</p>
+        </a>
+        <a class="tool-card" href="#/zenhan">
+          <span class="icon">⇔</span>
+          <h3>全角⇔半角変換</h3>
+          <p>英数字・記号・スペースをワンクリックで一括変換します。</p>
+        </a>
+        <a class="tool-card" href="#/kana">
+          <span class="icon">変</span>
+          <h3>かな⇔ローマ字変換</h3>
+          <p>ひらがな・カタカナとローマ字を双方向に変換します。</p>
+        </a>
+        <a class="tool-card" href="#/genkou">
+          <span class="icon">稿</span>
+          <h3>原稿用紙エディタ</h3>
+          <p>文章を20×20マスの原稿用紙に描画し、印刷もできます。</p>
+        </a>
+        <a class="tool-card" href="#/kanji">
+          <span class="icon">漢</span>
+          <h3>漢字利用チェック</h3>
+          <p>使われている漢字が小学校の何年生で習うかを判定します。</p>
+        </a>
+      </div>
     </div>
+    <div class="cover-group">
+      <h2 class="cover-group-heading">数字を読み解く</h2>
+      <div class="card-grid">
+        <a class="tool-card" href="#/ratio">
+          <span class="icon">率</span>
+          <h3>数くらべ</h3>
+          <p>二つの数を、差・増減率・倍率で比べ、文章にまとめます。</p>
+        </a>
+      </div>
+    </div>
+    <!-- 「時間を見渡す」カテゴリは公開ツールが揃うまで意図的にDOM未出力(Coming soon等のプレースホルダーも出さない)。CLAUDE.md参照。 -->
   </section>
 
   <!-- ===== 文字数カウント ===== -->
   <section class="view" id="view-count">
     <div class="tool-header">
       <a class="back" href="#/">← 道具帖トップ</a>
+      <p class="category">文章づくり道具帖</p>
       <h2>文字数カウント</h2>
       <p class="desc">貼り付けるだけで、文字数・バイト数・読了時間をその場で計算します。</p>
     </div>
@@ -452,6 +471,7 @@
   <section class="view" id="view-zenhan">
     <div class="tool-header">
       <a class="back" href="#/">← 道具帖トップ</a>
+      <p class="category">文章づくり道具帖</p>
       <h2>全角⇔半角変換</h2>
       <p class="desc">英数字・記号・スペースを対象に、全角⇔半角を一括変換します（半角カナは対象外）。</p>
     </div>
@@ -473,6 +493,7 @@
   <section class="view" id="view-kana">
     <div class="tool-header">
       <a class="back" href="#/">← 道具帖トップ</a>
+      <p class="category">文章づくり道具帖</p>
       <h2>かな⇔ローマ字変換</h2>
       <p class="desc">ひらがな・カタカナをヘボン式ローマ字に、またはローマ字をひらがなに変換します（漢字はそのまま出力されます）。</p>
     </div>
@@ -498,6 +519,7 @@
   <section class="view" id="view-genkou">
     <div class="tool-header">
       <a class="back" href="#/">← 道具帖トップ</a>
+      <p class="category">文章づくり道具帖</p>
       <h2>原稿用紙エディタ</h2>
       <p class="desc">入力した文章を20×20マス（400字詰め）の縦書き原稿用紙に描画します。段落の先頭は1マス字下げされます。</p>
     </div>
@@ -527,6 +549,7 @@
   <section class="view" id="view-kanji">
     <div class="tool-header">
       <a class="back" href="#/">← 道具帖トップ</a>
+      <p class="category">文章づくり道具帖</p>
       <h2>漢字利用チェック</h2>
       <p class="desc">文章に使われている漢字が、小学校の何年生で習う教育漢字かを判定します（学年別漢字配当表 全1026字に基づく）。</p>
     </div>
@@ -576,6 +599,7 @@
   <section class="view" id="view-ratio">
     <div class="tool-header">
       <a class="back" href="#/">← 道具帖トップ</a>
+      <p class="category">数字を読み解く</p>
       <h2>数くらべ</h2>
       <p class="desc">二つの数を入力すると、その関係を差・増減率・倍率で測り、文章にまとめます。</p>
     </div>
@@ -616,7 +640,10 @@
 
 </div>
 
-<footer class="site-footer">入力内容はすべてブラウザ内で処理され、外部には送信されません。</footer>
+<footer class="site-footer">
+  <p>入力内容はすべてブラウザ内で処理され、外部には送信されません。</p>
+  <p>水瀬衡が、文章や経済を書くときに使う小さな『ものさし』をもとにつくっています。</p>
+</footer>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -698,6 +725,15 @@
 
   /* ===================== router ===================== */
   const VIEWS = ['cover','count','zenhan','kana','genkou','kanji','ratio'];
+  const ROUTE_TITLES = {
+    cover: '道具帖',
+    count: '文字数カウント | 道具帖',
+    zenhan: '全角⇔半角変換 | 道具帖',
+    kana: 'かな⇔ローマ字変換 | 道具帖',
+    genkou: '原稿用紙エディタ | 道具帖',
+    kanji: '漢字利用チェック | 道具帖',
+    ratio: '数くらべ | 道具帖'
+  };
   function currentRoute(){
     const h = location.hash.replace(/^#\/?/, '');
     return VIEWS.includes(h) ? h : 'cover';
@@ -708,6 +744,7 @@
       const el = document.getElementById('view-' + v);
       if (el) el.classList.toggle('active', v === route);
     });
+    document.title = ROUTE_TITLES[route] || ROUTE_TITLES.cover;
     let activeLink = null;
     document.querySelectorAll('.tool-links a').forEach(a => {
       const isActive = a.dataset.route === route;

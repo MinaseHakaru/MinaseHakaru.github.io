@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A collection of small, self-contained Japanese-language web tools published as single HTML files (Claude Artifacts and/or opened directly via `file://`). No build system, no package manager, no test suite — each tool is one `.html` file with inline `<style>` and `<script>`, no dependencies beyond a Google Fonts stylesheet link.
 
 Current files:
-- `index.html` — "文章づくり道具帖", a multi-tool suite (hash-router SPA) covering: 文字数カウント, 全角⇔半角変換, かな⇔ローマ字変換, 原稿用紙エディタ, 漢字利用チェック, 数くらべ.
+- `index.html` — "道具帖", a multi-tool suite (hash-router SPA). Tools are grouped into categories: 文章づくり道具帖 (文字数カウント, 全角⇔半角変換, かな⇔ローマ字変換, 原稿用紙エディタ, 漢字利用チェック), 数字を読み解く (数くらべ). See "サイト名の階層とカテゴリ見出し" below.
 
 ## Working with this codebase
 
@@ -35,7 +35,15 @@ There is no build/lint/test tooling. To develop:
 
 Typography: **Shippori Mincho** (serif — branding mark, tool titles), **Zen Kaku Gothic New** (body/UI text), **JetBrains Mono** (numbers/stats, anything using `font-variant-numeric: tabular-nums`), loaded from Google Fonts with real fallback stacks. All UI copy is Japanese.
 
-**Router gap:** `document.title` is never updated on `hashchange` in `renderRoute()` — every view shows the same browser-tab title. Update it there if per-view titles become important (tab disambiguation, SEO on a future multi-page split).
+**Per-view tab titles:** `renderRoute()` sets `document.title` from the `ROUTE_TITLES` map (`"ツール名 | 道具帖"`, or bare `"道具帖"` for the cover). When adding a new tool, add it to `VIEWS` and `ROUTE_TITLES` together, and to the correct category in both `#view-cover` and its own `.tool-header .category`.
+
+## サイト名の階層とカテゴリ見出し
+
+サイト名は「道具帖」(ヘッダーのロゴ・トップページの見出し・`<title>` の既定値)。その下にツールをまとめるカテゴリが並ぶ: 文章づくり道具帖(文字数カウント・全角⇔半角変換・かな⇔ローマ字変換・原稿用紙エディタ・漢字利用チェック)、数字を読み解く(数くらべ)、時間を見渡す(現時点で公開ツールなし)。「文章づくり道具帖」は旧サイト名をそのままカテゴリ名として据え置いたもの。
+
+- トップページ(`#view-cover`)はカテゴリごとに `.cover-group` で分け、各グループの先頭に `.cover-group-heading` を置く。この見出しは意図的に非インタラクティブ — リンクにせず、タブ・折り畳み・選択式UIにもしない。見た目も `.stat-group h2` や `.rt-sentence-label` と同じ「静かな小見出し」系統(0.72rem・太字・字間広め・`--ink-faint`・背景/枠なし)を流用し、階層が大げさに見えないようにしている。
+- 個別ツールページの `.tool-header` にも所属カテゴリを `<p class="category">` として表示する(「← 道具帖トップ」とh2見出しの間)。こちらもリンクにしない — カテゴリ専用ページがまだ存在せず、押せる要素にすると遷移先と表示が食い違うため。
+- 「時間を見渡す」はツールが1つもないため、DOM上にも一切出力していない(Coming soon等のプレースホルダーも出さない)。`index.html` の `#view-cover` 内にコメントで理由を残している。このカテゴリに最初のツールを追加する時点で `.cover-group` を1つ追加すること。
 
 ## 原稿用紙エディタ (縦書き)
 
