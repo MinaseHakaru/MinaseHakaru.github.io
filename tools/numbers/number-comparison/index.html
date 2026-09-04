@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数くらべ | 道具帖</title>
+<meta name="description" content="二つの数を、差・増減率・倍率で比べ、結果を文章にまとめます。入力した数値は送信されません。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<header class="site-nav">
+  <div class="nav-inner">
+    <a class="brand-link" href="/"><span class="mark">帖</span><span class="name">道具帖</span></a>
+    <nav class="tool-links">
+      <a href="/tools/writing/character-count/">文字数カウント</a>
+      <a href="/tools/writing/width-converter/">全角⇔半角</a>
+      <a href="/tools/writing/kana-romaji/">かな⇔ローマ字</a>
+      <a href="/tools/writing/manuscript-paper/">原稿用紙</a>
+      <a href="/tools/writing/kanji-check/">漢字利用チェック</a>
+      <a href="/tools/numbers/number-comparison/" class="active">数くらべ</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="view">
+    <div class="tool-header">
+      <a class="back" href="/">← 道具帖トップ</a>
+      <p class="category">数字を読み解く</p>
+      <h2>数くらべ</h2>
+      <p class="desc">二つの数を入力すると、その関係を差・増減率・倍率で測り、文章にまとめます。</p>
+    </div>
+    <div class="panel">
+      <div class="tool-body stack">
+        <p class="rt-guide">左の数を基準に、右の数との関係を測ります。</p>
+        <div class="rt-inputs">
+          <div class="rt-field">
+            <label for="rt-a">基準の数</label>
+            <input type="number" id="rt-a" aria-label="基準の数の入力欄" inputmode="decimal" placeholder="120">
+          </div>
+          <div class="rt-arrow" aria-hidden="true">→</div>
+          <div class="rt-field">
+            <label for="rt-b">比べる数</label>
+            <input type="number" id="rt-b" aria-label="比べる数の入力欄" inputmode="decimal" placeholder="150">
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" id="rt-percent"> この数値は％です</label>
+        <div class="toolbar-group">
+          <button class="ghost" id="rt-reset">リセット</button>
+        </div>
+        <div id="rt-results" hidden>
+          <div class="stat-grid rt-grid">
+            <div class="stat-tile"><div class="val" id="rt-diff">—</div><div class="lbl" id="rt-diff-lbl">差</div></div>
+            <div class="stat-tile"><div class="val" id="rt-pct">—</div><div class="lbl">増減率</div></div>
+            <div class="stat-tile"><div class="val" id="rt-ratio">—</div><div class="lbl">倍率</div></div>
+          </div>
+          <p class="rt-note" id="rt-note" hidden></p>
+          <div class="rt-sentence-label">文章にすると</div>
+          <div class="rt-sentence" id="rt-sentence-box">
+            <button class="ghost copy-inline" id="rt-copy" aria-label="結果の文章をコピー">コピー</button>
+            <span id="rt-sentence"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer class="site-footer">
+  <p>入力内容はすべてブラウザ内で処理され、外部には送信されません。</p>
+  <p>水瀬衡が、文章や経済を書くときに使う小さな『ものさし』をもとにつくっています。</p>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script src="/assets/common.js"></script>
+<script>
+(function(){
+  "use strict";
+  const { copyText } = window.Toolbox;
+
+  /* ===================== 数くらべ ===================== */
+  (function initRatio(){
+    const aInput = document.getElementById('rt-a');
+    const bInput = document.getElementById('rt-b');
+    const percentCheck = document.getElementById('rt-percent');
+    const resultsEl = document.getElementById('rt-results');
+    const diffEl = document.getElementById('rt-diff');
+    const diffLbl = document.getElementById('rt-diff-lbl');
+    const pctEl = document.getElementById('rt-pct');
+    const ratioEl = document.getElementById('rt-ratio');
+    const noteEl = document.getElementById('rt-note');
+    const sentenceEl = document.getElementById('rt-sentence');
+    const resetBtn = document.getElementById('rt-reset');
+    const copyBtn = document.getElementById('rt-copy');
+
+    const MINUS = '−';
+
+    function decimalsOf(str){
+      const i = str.indexOf('.');
+      return i === -1 ? 0 : (str.length - i - 1);
+    }
+    function formatSigned(n, decimals){
+      if (n === 0) return (0).toFixed(decimals);
+      const sign = n > 0 ? '+' : MINUS;
+      return sign + Math.abs(n).toFixed(decimals);
+    }
+    function formatPlain(n, decimals){
+      const scale = Math.pow(10, decimals);
+      const rounded = Math.sign(n) * Math.round(Math.abs(n) * scale) / scale;
+      const str = String(rounded);
+      return rounded < 0 ? MINUS + str.slice(1) : str;
+    }
+    function setDash(el){
+      el.innerHTML = '';
+      const span = document.createElement('span');
+      span.className = 'rt-dash';
+      span.textContent = '—';
+      el.appendChild(span);
+    }
+
+    function render(){
+      const aStr = aInput.value.trim();
+      const bStr = bInput.value.trim();
+      const a = Number(aStr);
+      const b = Number(bStr);
+      const valid = aStr !== '' && bStr !== '' && Number.isFinite(a) && Number.isFinite(b);
+      if (!valid){
+        resultsEl.hidden = true;
+        return;
+      }
+      const percentMode = percentCheck.checked;
+
+      const decimals = Math.max(decimalsOf(aStr), decimalsOf(bStr));
+      const scale = Math.pow(10, decimals);
+      const diff = (Math.round(b * scale) - Math.round(a * scale)) / scale;
+      const diffText = formatSigned(diff, decimals) + (percentMode ? 'ポイント' : '');
+
+      const showPct = a > 0;
+      const showRatio = a > 0 && b >= 0;
+      const pct = showPct ? (b - a) / a * 100 : null;
+      const ratio = showRatio ? b / a : null;
+
+      diffLbl.textContent = percentMode ? 'ポイント差' : '差';
+      diffEl.textContent = diffText;
+
+      if (showPct){ pctEl.textContent = formatPlain(pct, 1) + '%'; }
+      else { setDash(pctEl); }
+
+      if (showRatio){ ratioEl.textContent = formatPlain(ratio, 2) + '倍'; }
+      else { setDash(ratioEl); }
+
+      let note = '';
+      let reason = '';
+      if (a === 0){
+        note = '基準となる値が0のため、増減率と倍率は算出できません。';
+        reason = '基準が0のため、増減率と倍率は表示していません。';
+      } else if (a < 0){
+        note = '基準となる値が負のため、増減率と倍率は誤読を招くため表示していません。';
+        reason = '基準が負のため、増減率と倍率は表示していません。';
+      } else if (b < 0){
+        note = '値が正から負へまたいでいるため、倍率は誤読を招くため表示していません。';
+        reason = '値が正から負へまたいでいるため、倍率は表示していません。';
+      }
+      noteEl.textContent = note;
+      noteEl.hidden = !note;
+
+      const unit = percentMode ? '%' : '';
+      const clauses = [`差は${diffText}`];
+      if (showPct) clauses.push(`増減率は${formatPlain(pct, 1)}%`);
+      if (showRatio) clauses.push(`元の${formatPlain(ratio, 2)}倍`);
+      const aDisp = aStr.replace(/^-/, MINUS) + unit;
+      const bDisp = bStr.replace(/^-/, MINUS) + unit;
+      sentenceEl.textContent = `${aDisp}から${bDisp}へ。${clauses.join('、')}です。${reason}`;
+
+      resultsEl.hidden = false;
+    }
+
+    aInput.addEventListener('input', render);
+    bInput.addEventListener('input', render);
+    percentCheck.addEventListener('change', render);
+    copyBtn.addEventListener('click', () => copyText(sentenceEl.textContent));
+    resetBtn.addEventListener('click', () => {
+      aInput.value = '';
+      bInput.value = '';
+      percentCheck.checked = false;
+      render();
+      aInput.focus();
+    });
+  })();
+})();
+</script>
+</body>
+</html>

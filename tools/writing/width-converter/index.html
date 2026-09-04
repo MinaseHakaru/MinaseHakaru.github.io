@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>全角⇔半角変換 | 道具帖</title>
+<meta name="description" content="英数字・記号・スペースの全角と半角をまとめて変換します。インストール不要、入力した文章は送信されません。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<header class="site-nav">
+  <div class="nav-inner">
+    <a class="brand-link" href="/"><span class="mark">帖</span><span class="name">道具帖</span></a>
+    <nav class="tool-links">
+      <a href="/tools/writing/character-count/">文字数カウント</a>
+      <a href="/tools/writing/width-converter/" class="active">全角⇔半角</a>
+      <a href="/tools/writing/kana-romaji/">かな⇔ローマ字</a>
+      <a href="/tools/writing/manuscript-paper/">原稿用紙</a>
+      <a href="/tools/writing/kanji-check/">漢字利用チェック</a>
+      <a href="/tools/numbers/number-comparison/">数くらべ</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="view">
+    <div class="tool-header">
+      <a class="back" href="/">← 道具帖トップ</a>
+      <p class="category">文章づくり道具帖</p>
+      <h2>全角⇔半角変換</h2>
+      <p class="desc">英数字・記号・スペースを対象に、全角⇔半角を一括変換します（半角カナは対象外）。</p>
+    </div>
+    <div class="panel">
+      <div class="tool-body stack">
+        <textarea id="zh-input" aria-label="全角⇔半角変換する文章の入力欄" style="min-height:160px;" placeholder="変換したい文章を入力してください…"></textarea>
+        <div class="toolbar-group">
+          <button class="primary" id="zh-toHalf">全角 → 半角</button>
+          <button class="primary" id="zh-toFull">半角 → 全角</button>
+          <button class="ghost" id="zh-copy">結果をコピー</button>
+          <button class="ghost" id="zh-reset">リセット</button>
+        </div>
+        <textarea id="zh-output" class="mono" aria-label="全角⇔半角変換結果の出力欄" style="min-height:160px;" placeholder="変換結果がここに表示されます" readonly></textarea>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer class="site-footer">
+  <p>入力内容はすべてブラウザ内で処理され、外部には送信されません。</p>
+  <p>水瀬衡が、文章や経済を書くときに使う小さな『ものさし』をもとにつくっています。</p>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script src="/assets/common.js"></script>
+<script>
+(function(){
+  "use strict";
+  const { copyText } = window.Toolbox;
+
+  /* ===================== 全角⇔半角 ===================== */
+  (function initZenhan(){
+    const input = document.getElementById('zh-input');
+    const output = document.getElementById('zh-output');
+    function toHalfWidth(text){
+      return text.replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/　/g, ' ');
+    }
+    function toFullWidth(text){
+      return text.replace(/[\x21-\x7E]/g, c => String.fromCharCode(c.charCodeAt(0) + 0xFEE0)).replace(/ /g, '　');
+    }
+    document.getElementById('zh-toHalf').addEventListener('click', () => { output.value = toHalfWidth(input.value); });
+    document.getElementById('zh-toFull').addEventListener('click', () => { output.value = toFullWidth(input.value); });
+    document.getElementById('zh-copy').addEventListener('click', () => copyText(output.value));
+    document.getElementById('zh-reset').addEventListener('click', () => { input.value = ''; output.value = ''; input.focus(); });
+  })();
+})();
+</script>
+</body>
+</html>

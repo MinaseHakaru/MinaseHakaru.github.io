@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>漢字利用チェック | 道具帖</title>
+<meta name="description" content="文章に使われている漢字が小学校の何年生で習うかを判定し、学年ごとに色分けして表示します。入力した文章は送信されません。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<header class="site-nav">
+  <div class="nav-inner">
+    <a class="brand-link" href="/"><span class="mark">帖</span><span class="name">道具帖</span></a>
+    <nav class="tool-links">
+      <a href="/tools/writing/character-count/">文字数カウント</a>
+      <a href="/tools/writing/width-converter/">全角⇔半角</a>
+      <a href="/tools/writing/kana-romaji/">かな⇔ローマ字</a>
+      <a href="/tools/writing/manuscript-paper/">原稿用紙</a>
+      <a href="/tools/writing/kanji-check/" class="active">漢字利用チェック</a>
+      <a href="/tools/numbers/number-comparison/">数くらべ</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="view">
+    <div class="tool-header">
+      <a class="back" href="/">← 道具帖トップ</a>
+      <p class="category">文章づくり道具帖</p>
+      <h2>漢字利用チェック</h2>
+      <p class="desc">文章に使われている漢字が、小学校の何年生で習う教育漢字かを判定します（学年別漢字配当表 全1026字に基づく）。</p>
+    </div>
+    <div class="panel">
+      <div class="tool-body stack">
+        <textarea id="kj-input" aria-label="漢字利用チェックする文章の入力欄" style="min-height:140px;" placeholder="チェックしたい文章を入力してください…"></textarea>
+        <div class="toolbar-group">
+          <button class="primary" id="kj-check">チェックする</button>
+          <button class="ghost" id="kj-reset">リセット</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout-2col" style="margin-top:20px;" id="kj-results" hidden>
+      <section class="panel">
+        <div class="tool-body">
+          <div class="kanji-output" id="kj-highlighted"></div>
+          <div class="legend">
+            <span><i style="background:var(--g1-bg);border:1px solid var(--g1);"></i>小1</span>
+            <span><i style="background:var(--g2-bg);border:1px solid var(--g2);"></i>小2</span>
+            <span><i style="background:var(--g3-bg);border:1px solid var(--g3);"></i>小3</span>
+            <span><i style="background:var(--g4-bg);border:1px solid var(--g4);"></i>小4</span>
+            <span><i style="background:var(--g5-bg);border:1px solid var(--g5);"></i>小5</span>
+            <span><i style="background:var(--g6-bg);border:1px solid var(--g6);"></i>小6</span>
+            <span><i style="background:var(--gx-bg);border:1px solid var(--gx);"></i>対象外（中学以降 等）</span>
+          </div>
+        </div>
+      </section>
+      <aside class="side">
+        <div class="panel stat-group">
+          <h2>判定サマリー</h2>
+          <div class="stat-grid">
+            <div class="stat-tile" style="grid-column:1/-1;"><div class="val" id="kj-maxgrade">-</div><div class="lbl">最高学年（対象外を除く）</div></div>
+            <div class="stat-tile"><div class="val" id="kj-total">0<span class="u">字</span></div><div class="lbl">漢字の異なり数</div></div>
+            <div class="stat-tile"><div class="val" id="kj-other">0<span class="u">字</span></div><div class="lbl">対象外の漢字数</div></div>
+          </div>
+        </div>
+        <div class="panel stat-group">
+          <h2>学年別の内訳</h2>
+          <div class="stat-grid" id="kj-breakdown"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<footer class="site-footer">
+  <p>入力内容はすべてブラウザ内で処理され、外部には送信されません。</p>
+  <p>水瀬衡が、文章や経済を書くときに使う小さな『ものさし』をもとにつくっています。</p>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script src="/assets/common.js"></script>
+<script>
+(function(){
+  "use strict";
+  const { escapeHtml, fmtNum } = window.Toolbox;
+
+  /* ===================== 漢字利用チェック ===================== */
+  const KYOIKU_KANJI = {
+  1: "一右雨円王音下火花貝学気九休玉金空月犬見五口校左三山子四糸字耳七車手十出女小上森人水正生青夕石赤千川先早草足村大男竹中虫町天田土二日入年白八百文木本名目立力林六",
+  2: "引羽雲園遠何科夏家歌画回会海絵外角楽活間丸岩顔汽記帰弓牛魚京強教近兄形計元言原戸古午後語工公広交光考行高黄合谷国黒今才細作算止市矢姉思紙寺自時室社弱首秋週春書少場色食心新親図数西声星晴切雪船線前組走多太体台地池知茶昼長鳥朝直通弟店点電刀冬当東答頭同道読内南肉馬売買麦半番父風分聞米歩母方北毎妹万明鳴毛門夜野友用曜来里理話",
+  3: "悪安暗医委意育員院飲運泳駅央横屋温化荷界開階寒感漢館岸起期客究急級宮球去橋業曲局銀区苦具君係軽血決研県庫湖向幸港号根祭皿仕死使始指歯詩次事持式実写者主守取酒受州拾終習集住重宿所暑助昭消商章勝乗植申身神真深進世整昔全相送想息速族他打対待代第題炭短談着注柱丁帳調追定庭笛鉄転都度投豆島湯登等動童農波配倍箱畑発反坂板皮悲美鼻筆氷表秒病品負部服福物平返勉放味命面問役薬由油有遊予羊洋葉陽様落流旅両緑礼列練路和",
+  4: "愛案以衣位茨印英栄媛塩岡億加果貨課芽賀改械害街各覚潟完官管関観願岐希季旗器機議求泣給挙漁共協鏡競極熊訓軍郡群径景芸欠結建健験固功好香候康佐差菜最埼材崎昨札刷察参産散残氏司試児治滋辞鹿失借種周祝順初松笑唱焼照城縄臣信井成省清静席積折節説浅戦選然争倉巣束側続卒孫帯隊達単置仲沖兆低底的典伝徒努灯働特徳栃奈梨熱念敗梅博阪飯飛必票標不夫付府阜富副兵別辺変便包法望牧末満未民無約勇要養浴利陸良料量輪類令冷例連老労録",
+  5: "圧囲移因永営衛易益液演応往桜可仮価河過快解格確額刊幹慣眼紀基寄規喜技義逆久旧救居許境均禁句型経潔件険検限現減故個護効厚耕航鉱構興講告混査再災妻採際在財罪殺雑酸賛士支史志枝師資飼示似識質舎謝授修述術準序招証象賞条状常情織職制性政勢精製税責績接設絶祖素総造像増則測属率損貸態団断築貯張停提程適統堂銅導得毒独任燃能破犯判版比肥非費備評貧布婦武復複仏粉編弁保墓報豊防貿暴脈務夢迷綿輸余容略留領歴",
+  6: "胃異遺域宇映延沿恩我灰拡革閣割株干巻看簡危机揮貴疑吸供胸郷勤筋系敬警劇激穴券絹権憲源厳己呼誤后孝皇紅降鋼刻穀骨困砂座済裁策冊蚕至私姿視詞誌磁射捨尺若樹収宗就衆従縦縮熟純処署諸除承将傷障蒸針仁垂推寸盛聖誠舌宣専泉洗染銭善奏窓創装層操蔵臓存尊退宅担探誕段暖値宙忠著庁頂腸潮賃痛敵展討党糖届難乳認納脳派拝背肺俳班晩否批秘俵腹奮並陛閉片補暮宝訪亡忘棒枚幕密盟模訳郵優預幼欲翌乱卵覧裏律臨朗論"
+  };
+  const CHAR_GRADE = {};
+  for (const g of ['1','2','3','4','5','6']) for (const c of KYOIKU_KANJI[g]) CHAR_GRADE[c] = g;
+
+  (function initKanji(){
+    const input = document.getElementById('kj-input');
+    const checkBtn = document.getElementById('kj-check');
+    const resultsEl = document.getElementById('kj-results');
+    const highlighted = document.getElementById('kj-highlighted');
+    const maxGradeEl = document.getElementById('kj-maxgrade');
+    const totalEl = document.getElementById('kj-total');
+    const otherEl = document.getElementById('kj-other');
+    const breakdownEl = document.getElementById('kj-breakdown');
+
+    function check(){
+      const text = input.value;
+      const byGrade = {1:new Set(),2:new Set(),3:new Set(),4:new Set(),5:new Set(),6:new Set()};
+      const otherSet = new Set();
+      let html = '';
+      for (const ch of Array.from(text)){
+        if (/[一-鿿々]/.test(ch)){
+          const grade = CHAR_GRADE[ch];
+          if (grade){ byGrade[grade].add(ch); html += `<span class="k k${grade}" title="小学${grade}年生">${escapeHtml(ch)}</span>`; }
+          else { otherSet.add(ch); html += `<span class="k kx" title="小学校では習わない漢字">${escapeHtml(ch)}</span>`; }
+        } else {
+          html += escapeHtml(ch);
+        }
+      }
+      highlighted.innerHTML = html || '<span style="color:var(--ink-faint);">（漢字を含む文章を入力してください）</span>';
+
+      let maxGrade = 0, totalUnique = 0;
+      breakdownEl.innerHTML = '';
+      for (const g of ['1','2','3','4','5','6']){
+        const set = byGrade[g];
+        totalUnique += set.size;
+        if (set.size > 0) maxGrade = Math.max(maxGrade, parseInt(g,10));
+        const tile = document.createElement('div');
+        tile.className = 'stat-tile';
+        tile.innerHTML = `<div class="val">${fmtNum(set.size)}<span class="u">字</span></div><div class="lbl">小学${g}年</div>`;
+        breakdownEl.appendChild(tile);
+      }
+      totalUnique += otherSet.size;
+      maxGradeEl.textContent = maxGrade > 0 ? `小学${maxGrade}年生まで` : (otherSet.size > 0 ? '対象外の漢字のみ' : '漢字なし');
+      totalEl.innerHTML = fmtNum(totalUnique) + '<span class="u">字</span>';
+      otherEl.innerHTML = fmtNum(otherSet.size) + '<span class="u">字</span>';
+      resultsEl.hidden = false;
+    }
+    checkBtn.addEventListener('click', check);
+    document.getElementById('kj-reset').addEventListener('click', () => {
+      input.value = '';
+      resultsEl.hidden = true;
+      highlighted.innerHTML = '';
+      breakdownEl.innerHTML = '';
+      maxGradeEl.textContent = '-';
+      totalEl.innerHTML = '0<span class="u">字</span>';
+      otherEl.innerHTML = '0<span class="u">字</span>';
+      input.focus();
+    });
+  })();
+})();
+</script>
+</body>
+</html>

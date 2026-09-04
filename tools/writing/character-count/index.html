@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文字数カウント | 道具帖</title>
+<meta name="description" content="文字数・行数・バイト数・読了時間・原稿用紙の枚数をリアルタイムに数えます。インストール不要、入力した文章は送信されません。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<header class="site-nav">
+  <div class="nav-inner">
+    <a class="brand-link" href="/"><span class="mark">帖</span><span class="name">道具帖</span></a>
+    <nav class="tool-links">
+      <a href="/tools/writing/character-count/" class="active">文字数カウント</a>
+      <a href="/tools/writing/width-converter/">全角⇔半角</a>
+      <a href="/tools/writing/kana-romaji/">かな⇔ローマ字</a>
+      <a href="/tools/writing/manuscript-paper/">原稿用紙</a>
+      <a href="/tools/writing/kanji-check/">漢字利用チェック</a>
+      <a href="/tools/numbers/number-comparison/">数くらべ</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="view">
+    <div class="tool-header">
+      <a class="back" href="/">← 道具帖トップ</a>
+      <p class="category">文章づくり道具帖</p>
+      <h2>文字数カウント</h2>
+      <p class="desc">貼り付けるだけで、文字数・バイト数・読了時間をその場で計算します。</p>
+    </div>
+
+    <main class="layout-2col">
+      <section class="panel">
+        <div class="toolbar">
+          <div class="toolbar-group">
+            <label class="check"><input type="checkbox" id="cnt-realtime" checked> リアルタイムにカウント</label>
+            <button id="cnt-countBtn" style="display:none;">カウントする</button>
+          </div>
+          <div class="toolbar-group">
+            <button id="cnt-copyBtn" class="ghost">コピー</button>
+            <button id="cnt-resetBtn" class="ghost">リセット</button>
+          </div>
+        </div>
+        <div class="tool-body">
+          <textarea id="cnt-input" aria-label="カウントする文章の入力欄" style="min-height:380px;" placeholder="ここに文章を入力、または貼り付けてください…"></textarea>
+          <div class="hero-stat">
+            <span class="num" id="cnt-hero">0</span>
+            <span class="unit">文字</span>
+            <span class="label">文字数</span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side">
+        <div class="panel stat-group">
+          <h2>文字数の内訳</h2>
+          <div class="stat-grid">
+            <div class="stat-tile"><div class="val" id="cnt-noNewline">0<span class="u">文字</span></div><div class="lbl">改行を除く</div></div>
+            <div class="stat-tile"><div class="val" id="cnt-noSpace">0<span class="u">文字</span></div><div class="lbl">改行・空白を除く</div></div>
+            <div class="stat-tile"><div class="val" id="cnt-lines">0<span class="u">行</span></div><div class="lbl">行数</div></div>
+            <div class="stat-tile"><div class="val" id="cnt-sheets">0<span class="u">枚</span></div><div class="lbl">原稿用紙（400字詰）</div></div>
+            <div class="stat-tile"><div class="val" id="cnt-variants">0<span class="u">文字</span></div><div class="lbl">異体字</div></div>
+            <div class="stat-tile"><div class="val" id="cnt-words">0<span class="u">語</span></div><div class="lbl">英単語数</div></div>
+          </div>
+        </div>
+        <div class="panel stat-group">
+          <h2>バイト数</h2>
+          <div class="stat-grid">
+            <div class="stat-tile"><div class="val" id="cnt-utf8">0<span class="u">B</span></div><div class="lbl">UTF-8</div></div>
+            <div class="stat-tile"><div class="val" id="cnt-utf16">0<span class="u">B</span></div><div class="lbl">UTF-16</div></div>
+            <div class="stat-tile"><div class="val" id="cnt-sjis">0<span class="u">B</span></div><div class="lbl">Shift-JIS（概算）</div></div>
+            <div class="stat-tile"><div class="val" id="cnt-euc">0<span class="u">B</span></div><div class="lbl">EUC-JP（概算）</div></div>
+            <div class="stat-tile"><div class="val" id="cnt-jis">0<span class="u">B</span></div><div class="lbl">JIS（概算）</div></div>
+          </div>
+          <div class="approx-note">※ Shift-JIS・EUC-JP・JISは主要な文字集合をもとにした概算値です。</div>
+        </div>
+        <div class="panel stat-group">
+          <h2>読了・発表の目安</h2>
+          <div class="stat-grid">
+            <div class="stat-tile"><div class="val" id="cnt-read">0秒</div><div class="lbl">読了時間（黙読）</div></div>
+            <div class="stat-tile"><div class="val" id="cnt-speak">0秒</div><div class="lbl">発表時間（朗読）</div></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </section>
+</div>
+
+<footer class="site-footer">
+  <p>入力内容はすべてブラウザ内で処理され、外部には送信されません。</p>
+  <p>水瀬衡が、文章や経済を書くときに使う小さな『ものさし』をもとにつくっています。</p>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script src="/assets/common.js"></script>
+<script>
+(function(){
+  "use strict";
+  const { copyText, fmtNum, layoutGenkou } = window.Toolbox;
+
+  /* ===================== 文字数カウント ===================== */
+  (function initCount(){
+    const input = document.getElementById('cnt-input');
+    const realtime = document.getElementById('cnt-realtime');
+    const countBtn = document.getElementById('cnt-countBtn');
+    const resetBtn = document.getElementById('cnt-resetBtn');
+    const copyBtn = document.getElementById('cnt-copyBtn');
+
+    const VARIANT_RE = /[︀-️\u{E0100}-\u{E01EF}]/gu;
+    const JP_RE = /[぀-ヿ㐀-䶿一-鿿＀-￯　-〿]/;
+
+    function computeStats(text){
+      const codepoints = Array.from(text);
+      const total = codepoints.length;
+      const noNewline = codepoints.filter(c => c !== '\n' && c !== '\r').length;
+      const wsSet = new Set(['\n','\r','\t',' ','　']);
+      const noSpace = codepoints.filter(c => !wsSet.has(c)).length;
+      const lines = text === '' ? 0 : text.split('\n').length;
+      const sheets = total === 0 ? 0 : layoutGenkou(text).length;
+      const variants = (text.match(VARIANT_RE) || []).length;
+      const utf8Bytes = new TextEncoder().encode(text).length;
+      const utf16Bytes = text.length * 2;
+
+      let sjisBytes = 0, eucBytes = 0;
+      for (const c of codepoints){
+        const cp = c.codePointAt(0);
+        if (cp <= 0x7E){ sjisBytes += 1; eucBytes += 1; }
+        else if (cp >= 0xFF61 && cp <= 0xFF9F){ sjisBytes += 1; eucBytes += 2; }
+        else { sjisBytes += 2; eucBytes += 2; }
+      }
+      let jisBytes = 0, mode = 'ascii';
+      for (const c of codepoints){
+        const cp = c.codePointAt(0);
+        const isAscii = cp <= 0x7E;
+        if (isAscii){ if (mode !== 'ascii'){ jisBytes += 3; mode = 'ascii'; } jisBytes += 1; }
+        else { if (mode !== 'jis'){ jisBytes += 3; mode = 'jis'; } jisBytes += 2; }
+      }
+      if (mode === 'jis') jisBytes += 3;
+
+      let jpChars = 0;
+      for (const c of codepoints) if (JP_RE.test(c)) jpChars++;
+      const englishWords = (text.match(/[A-Za-z]+(?:['’][A-Za-z]+)?/g) || []).length;
+      const readMin = jpChars/600 + englishWords/200;
+      const speakMin = jpChars/300 + englishWords/150;
+
+      return {total, noNewline, noSpace, lines, sheets, variants, utf8Bytes, utf16Bytes, sjisBytes, eucBytes, jisBytes, englishWords, readMin, speakMin};
+    }
+    function formatDuration(min){
+      if (min <= 0) return '0秒';
+      const totalSec = Math.round(min*60);
+      const m = Math.floor(totalSec/60), s = totalSec % 60;
+      if (m === 0) return `${s}秒`;
+      if (s === 0) return `${m}分`;
+      return `${m}分${s}秒`;
+    }
+    function render(){
+      const s = computeStats(input.value);
+      document.getElementById('cnt-hero').textContent = fmtNum(s.total);
+      document.getElementById('cnt-noNewline').innerHTML = fmtNum(s.noNewline)+'<span class="u">文字</span>';
+      document.getElementById('cnt-noSpace').innerHTML = fmtNum(s.noSpace)+'<span class="u">文字</span>';
+      document.getElementById('cnt-lines').innerHTML = fmtNum(s.lines)+'<span class="u">行</span>';
+      document.getElementById('cnt-sheets').innerHTML = fmtNum(s.sheets)+'<span class="u">枚</span>';
+      document.getElementById('cnt-variants').innerHTML = fmtNum(s.variants)+'<span class="u">文字</span>';
+      document.getElementById('cnt-words').innerHTML = fmtNum(s.englishWords)+'<span class="u">語</span>';
+      document.getElementById('cnt-utf8').innerHTML = fmtNum(s.utf8Bytes)+'<span class="u">B</span>';
+      document.getElementById('cnt-utf16').innerHTML = fmtNum(s.utf16Bytes)+'<span class="u">B</span>';
+      document.getElementById('cnt-sjis').innerHTML = fmtNum(s.sjisBytes)+'<span class="u">B</span>';
+      document.getElementById('cnt-euc').innerHTML = fmtNum(s.eucBytes)+'<span class="u">B</span>';
+      document.getElementById('cnt-jis').innerHTML = fmtNum(s.jisBytes)+'<span class="u">B</span>';
+      document.getElementById('cnt-read').textContent = formatDuration(s.readMin);
+      document.getElementById('cnt-speak').textContent = formatDuration(s.speakMin);
+    }
+    function updateRealtimeUI(){
+      const on = realtime.checked;
+      countBtn.style.display = on ? 'none' : 'inline-block';
+      if (on) render();
+    }
+    input.addEventListener('input', () => { if (realtime.checked) render(); });
+    realtime.addEventListener('change', updateRealtimeUI);
+    countBtn.addEventListener('click', render);
+    resetBtn.addEventListener('click', () => { input.value = ''; render(); input.focus(); });
+    copyBtn.addEventListener('click', () => copyText(input.value));
+    render(); updateRealtimeUI();
+  })();
+})();
+</script>
+</body>
+</html>
