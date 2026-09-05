@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>実質値 | 道具帖</title>
+<meta name="description" content="物価上昇率と期間から、いまの金額が物価の変わったあとでどれだけの買い物に相当するかを測ります。入力した数値は送信されません。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<header class="site-nav">
+  <div class="nav-inner">
+    <a class="brand-link" href="/"><span class="mark">帖</span><span class="name">道具帖</span></a>
+    <nav class="tool-links">
+      <a href="/tools/writing/character-count/">文字数カウント</a>
+      <a href="/tools/writing/width-converter/">全角⇔半角</a>
+      <a href="/tools/writing/kana-romaji/">かな⇔ローマ字</a>
+      <a href="/tools/writing/manuscript-paper/">原稿用紙</a>
+      <a href="/tools/writing/kanji-check/">漢字利用チェック</a>
+      <a href="/tools/numbers/number-comparison/">数くらべ</a>
+      <a href="/tools/numbers/real-value/" class="active">実質値</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="view">
+    <div class="tool-header">
+      <a class="back" href="/">← 道具帖トップ</a>
+      <p class="category">数字を読み解く</p>
+      <h2>実質値</h2>
+      <p class="desc">物価が変わると、同じ金額の意味も変わります。名目の金額を、物価をそろえた価値に直します。</p>
+    </div>
+    <div class="panel">
+      <div class="tool-body stack">
+        <p class="rv-guide">いまの金額が、物価が変わったあとの世界でどれだけの買い物に相当するかを測ります。</p>
+        <div class="toolbar-group rv-modes">
+          <button class="seg active" id="rv-mode-annual">年率で測る</button>
+          <button class="seg" id="rv-mode-total">期間全体で測る</button>
+        </div>
+
+        <div class="rv-fields" id="rv-fields-annual">
+          <div class="rv-field">
+            <label for="rv-amount">いまの金額（円）</label>
+            <input type="number" id="rv-amount" aria-label="いまの金額の入力欄（円）" inputmode="decimal" placeholder="1000000">
+          </div>
+          <div class="rv-field narrow">
+            <label for="rv-rate">年平均の物価上昇率（％）</label>
+            <input type="number" id="rv-rate" aria-label="年平均の物価上昇率の入力欄（パーセント）" inputmode="decimal" step="0.1" placeholder="2">
+          </div>
+          <div class="rv-field narrow">
+            <label for="rv-years">年数</label>
+            <input type="number" id="rv-years" aria-label="年数の入力欄" inputmode="decimal" placeholder="10">
+          </div>
+        </div>
+
+        <div class="rv-fields" id="rv-fields-total" hidden>
+          <div class="rv-field">
+            <label for="rv-amount-t">いまの金額（円）</label>
+            <input type="number" id="rv-amount-t" aria-label="いまの金額の入力欄（円）" inputmode="decimal" placeholder="1000000">
+          </div>
+          <div class="rv-field narrow">
+            <label for="rv-total">期間全体の物価上昇率（％）</label>
+            <input type="number" id="rv-total" aria-label="期間全体の物価上昇率の入力欄（パーセント）" inputmode="decimal" step="0.1" placeholder="20">
+          </div>
+        </div>
+
+        <div class="toolbar-group">
+          <button class="ghost" id="rv-reset">リセット</button>
+        </div>
+
+        <div id="rv-results" hidden>
+          <div class="stat-grid rv-grid">
+            <div class="stat-tile"><div class="val" id="rv-mult">—</div><div class="lbl">物価倍率</div></div>
+            <div class="stat-tile"><div class="val" id="rv-real">—</div><div class="lbl">実質値</div></div>
+            <div class="stat-tile"><div class="val" id="rv-change">—</div><div class="lbl">購買力の増減</div></div>
+          </div>
+          <p class="result-note" id="rv-note" hidden></p>
+          <div class="result-sentence-label">文章にすると</div>
+          <div class="result-sentence" id="rv-sentence-box">
+            <button class="ghost copy-inline" id="rv-copy" aria-label="結果の文章をコピー">コピー</button>
+            <span id="rv-sentence"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-doc">
+      <section>
+        <h3>使い方</h3>
+        <p>金額と、物価がどれだけ上がるかを入れてください。<b>年率で測る</b>は、年平均の上昇率が何年続くかで測ります。<b>期間全体で測る</b>は、期間を通して何％上がったかを直接入れます。入口が二つあるだけで、測っているものは同じ「物価の比」です。</p>
+        <p>物価上昇率にマイナスを入れれば、物価が下がる場合も測れます。</p>
+      </section>
+
+      <section>
+        <h3>計算の考え方</h3>
+        <div class="formula">年率で測る      物価倍率 = (1 + 年平均の物価上昇率) <b>^</b> 年数
+期間全体で測る  物価倍率 = 1 + 期間全体の物価上昇率
+
+                <b>実質値 = 名目の金額 ÷ 物価倍率</b></div>
+        <p>物価が上がると、同じ金額で買えるものは減ります。掛けるのではなく割るのは、そのためです。物価倍率が1より小さいとき（物価が下がったとき）は、割った結果は元の金額より大きくなります。</p>
+      </section>
+
+      <section>
+        <h3>例</h3>
+        <p>100万円、年2％、10年で測ります。物価倍率は 1.02 の10乗で約1.219倍。100万円をこれで割ると約82万円です。</p>
+        <p>つまり、いまの100万円は、10年後の物価のもとでは、いまの約82万円分の買い物にしか相当しません。金額は100万円のまま変わらないのに、買えるものが18％ぶん減っている。これが名目と実質のずれです。</p>
+      </section>
+
+      <section>
+        <h3>注意</h3>
+        <ul>
+          <li>消費者物価指数は、平均的な家計が買う財・サービスの価格変動を測る指標です。個々の家計の生活費の上昇率そのものではありません。</li>
+          <li>実際の物価の動きを使う場合は、どの系列か（総合、生鮮食品を除く総合など）と、期間の取り方（年平均、年度平均、前年同月比）を確認してください。同じ「物価上昇率」でも別の数字になります。</li>
+          <li>長い期間を一定の年率で計算した結果は、その率がずっと続いたと仮定した場合の試算です。実際の物価は毎年動きます。</li>
+        </ul>
+        <p style="margin-top:12px;">実際の物価の動きは、総務省統計局の<a href="https://www.stat.go.jp/data/cpi/" target="_blank" rel="noopener noreferrer">消費者物価指数</a>で確認できます。この道具は物価のデータを持たず、入力された率から関係を測るだけです。</p>
+      </section>
+    </div>
+  </section>
+</div>
+
+<footer class="site-footer">
+  <p>入力内容はすべてブラウザ内で処理され、外部には送信されません。</p>
+  <p>水瀬衡が、文章や経済を書くときに使う小さな『ものさし』をもとにつくっています。</p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="/assets/common.js"></script>
+<script>
+(function(){
+  "use strict";
+  const { copyText, fmtNum } = window.Toolbox;
+
+  /* ===================== 実質値 ===================== */
+  (function initRealValue(){
+    const btnAnnual = document.getElementById('rv-mode-annual');
+    const btnTotal  = document.getElementById('rv-mode-total');
+    const fieldsAnnual = document.getElementById('rv-fields-annual');
+    const fieldsTotal  = document.getElementById('rv-fields-total');
+    const amountA = document.getElementById('rv-amount');
+    const rateEl  = document.getElementById('rv-rate');
+    const yearsEl = document.getElementById('rv-years');
+    const amountT = document.getElementById('rv-amount-t');
+    const totalEl = document.getElementById('rv-total');
+    const resultsEl = document.getElementById('rv-results');
+    const multEl   = document.getElementById('rv-mult');
+    const realEl   = document.getElementById('rv-real');
+    const changeEl = document.getElementById('rv-change');
+    const noteEl   = document.getElementById('rv-note');
+    const sentenceEl = document.getElementById('rv-sentence');
+    const resetBtn = document.getElementById('rv-reset');
+    const copyBtn  = document.getElementById('rv-copy');
+
+    const MINUS = '−';
+    const MAX_YEARS = 200;
+    /* 有限であっても、けた数が増えすぎた時点で「購買力の比較」としては
+       意味を失う（表示も指数表記に崩れる）。数値を出さず理由を出す。 */
+    const MAX_AMOUNT = 1e15;   // 1000兆円
+    const MAX_MULT   = 1e12;   // 1兆倍
+    let mode = 'annual';
+
+    function setDash(el){
+      el.innerHTML = '';
+      const span = document.createElement('span');
+      span.className = 'val-dash';
+      span.textContent = '—';
+      el.appendChild(span);
+    }
+    function neg(str){ return String(str).replace(/^-/, MINUS); }
+    function fixed(n, d){
+      const v = Number(n.toFixed(d));
+      return neg(v.toFixed(d));
+    }
+    function signedPct(n){
+      if (Math.abs(n) < 0.05) return '0.0%';
+      return (n > 0 ? '+' : MINUS) + Math.abs(n).toFixed(1) + '%';
+    }
+    function yen(n){ return neg(fmtNum(Math.round(n))) + '円'; }
+    function trimNum(str){
+      // 入力文字列をそのまま文章に使う（1.50 → 1.5、-2 → −2）
+      const v = Number(str);
+      return neg(String(v));
+    }
+
+    function checkMult(mult){
+      if (!Number.isFinite(mult) || mult <= 0) return { ok: false, reason: '入力された値では物価倍率を求められません。' };
+      if (mult > MAX_MULT) return { ok: false, reason: '物価倍率が大きくなりすぎるため、購買力の比較として意味を持ちません。物価上昇率か年数を見直してください。' };
+      return null;
+    }
+
+    /* 物価倍率を求める。計算できない場合は理由を返す。 */
+    function priceMultiple(){
+      if (mode === 'annual'){
+        const rateStr = rateEl.value.trim(), yearsStr = yearsEl.value.trim();
+        if (rateStr === '' || yearsStr === '') return { ok: false, empty: true };
+        const r = Number(rateStr), y = Number(yearsStr);
+        if (!Number.isFinite(r) || !Number.isFinite(y)) return { ok: false, empty: true };
+        if (y < 0) return { ok: false, reason: '年数は0以上で入力してください。過去にさかのぼる向きには対応していません。' };
+        if (y > MAX_YEARS) return { ok: false, reason: '年数は' + MAX_YEARS + '年までで計算します。それ以上の期間は、一定の率を当てはめる前提そのものが成り立ちません。' };
+        if (r <= -100) return { ok: false, reason: '年平均の物価上昇率が−100%以下の場合、物価水準が0以下になるため計算できません。' };
+        const mult = Math.pow(1 + r / 100, y);
+        const bad = checkMult(mult);
+        if (bad) return bad;
+        return { ok: true, mult: mult, r: r, y: y, rateStr: rateStr, yearsStr: yearsStr };
+      }
+      const totalStr = totalEl.value.trim();
+      if (totalStr === '') return { ok: false, empty: true };
+      const t = Number(totalStr);
+      if (!Number.isFinite(t)) return { ok: false, empty: true };
+      if (t <= -100) return { ok: false, reason: '期間全体の物価上昇率が−100%以下の場合、物価水準が0以下になるため計算できません。' };
+      const mult = 1 + t / 100;
+      const bad = checkMult(mult);
+      if (bad) return bad;
+      return { ok: true, mult: mult, t: t, totalStr: totalStr };
+    }
+
+    function render(){
+      const amountEl = (mode === 'annual') ? amountA : amountT;
+      const amountStr = amountEl.value.trim();
+      const amount = Number(amountStr);
+      const pm = priceMultiple();
+
+      if (amountStr === '' || !Number.isFinite(amount) || pm.empty){
+        resultsEl.hidden = true;
+        return;
+      }
+      if (amount < 0){
+        showBlocked('金額は0以上で入力してください。購買力を測る道具のため、負の金額は扱いません。');
+        return;
+      }
+      if (amount > MAX_AMOUNT){
+        showBlocked('金額が大きすぎるため計算できません。1000兆円までで入力してください。');
+        return;
+      }
+      if (!pm.ok){
+        showBlocked(pm.reason);
+        return;
+      }
+
+      const real = amount / pm.mult;
+      if (!Number.isFinite(real)){
+        showBlocked('入力された値が大きすぎるため計算できません。');
+        return;
+      }
+      const change = (real - amount) / (amount === 0 ? 1 : amount) * 100;
+
+      multEl.textContent = fixed(pm.mult, 3) + '倍';
+      realEl.textContent = yen(real);
+      changeEl.textContent = amount === 0 ? '0.0%' : signedPct(change);
+      noteEl.textContent = '';
+      noteEl.hidden = true;
+
+      sentenceEl.textContent = buildSentence(pm, amount, real, change);
+      resultsEl.hidden = false;
+    }
+
+    function showBlocked(reason){
+      setDash(multEl); setDash(realEl); setDash(changeEl);
+      noteEl.textContent = reason;
+      noteEl.hidden = false;
+      sentenceEl.textContent = reason;
+      resultsEl.hidden = false;
+    }
+
+    function buildSentence(pm, amount, real, change){
+      const multText = fixed(pm.mult, 3);
+      const flat = (mode === 'annual')
+        ? (pm.r === 0 || pm.y === 0)
+        : (pm.t === 0);
+      if (flat){
+        return '物価が変わらなければ、' + yen(amount) + 'の価値も変わりません。';
+      }
+      let head;
+      if (mode === 'annual'){
+        const rateDisp = trimNum(Math.abs(pm.r));
+        const dir = pm.r > 0 ? '上昇' : '下落';
+        head = '年' + rateDisp + '%の物価' + dir + 'が' + trimNum(pm.yearsStr) + '年続くと、物価水準は約' + multText + '倍になります。';
+      } else {
+        const tDisp = trimNum(Math.abs(pm.t));
+        const dir = pm.t > 0 ? '上がる' : '下がる';
+        head = '期間全体で物価が' + tDisp + '%' + dir + 'と、物価水準は' + multText + '倍になります。';
+      }
+      const tail = 'いまの' + yen(amount) + 'は、そのときの物価では約' + yen(real)
+                 + '分の買い物に相当します（' + signedPct(change) + '）。';
+      return head + tail;
+    }
+
+    function setMode(next){
+      mode = next;
+      const annual = next === 'annual';
+      btnAnnual.classList.toggle('active', annual);
+      btnTotal.classList.toggle('active', !annual);
+      fieldsAnnual.hidden = !annual;
+      fieldsTotal.hidden = annual;
+      // 金額はモードをまたいで引き継ぐ（同じ数を二度打たせない）
+      if (annual){ if (amountT.value !== '') amountA.value = amountT.value; }
+      else { if (amountA.value !== '') amountT.value = amountA.value; }
+      render();
+    }
+
+    btnAnnual.addEventListener('click', () => setMode('annual'));
+    btnTotal.addEventListener('click', () => setMode('total'));
+    [amountA, rateEl, yearsEl, amountT, totalEl].forEach(el => el.addEventListener('input', render));
+    copyBtn.addEventListener('click', () => copyText(sentenceEl.textContent));
+    resetBtn.addEventListener('click', () => {
+      [amountA, rateEl, yearsEl, amountT, totalEl].forEach(el => { el.value = ''; });
+      render();
+      (mode === 'annual' ? amountA : amountT).focus();
+    });
+  })();
+})();
+</script>
+</body>
+</html>

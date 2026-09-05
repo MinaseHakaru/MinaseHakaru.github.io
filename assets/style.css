@@ -38,6 +38,9 @@
   }
 
   *{ box-sizing: border-box; }
+  /* display を持つクラス(.rv-fields など)が hidden 属性に勝ってしまうため、
+     hidden を全体で優先させる。JSで hidden を切り替える箇所すべてに効く。 */
+  [hidden]{ display: none !important; }
   body{
     margin: 0;
     background: var(--bg);
@@ -202,17 +205,17 @@
   .rt-grid{ grid-template-columns: repeat(3, 1fr); }
   .rt-grid .stat-tile{ padding: 10px; }
   .rt-grid .stat-tile .val{ font-size: 1.05rem; }
-  .rt-dash{ color: var(--ink-faint); font-weight: 400; }
-  .rt-note{ font-size: 0.82rem; color: var(--ink-soft); margin: 16px 0 0; }
-  .rt-sentence-label{
+  .rt-dash, .val-dash{ color: var(--ink-faint); font-weight: 400; }
+  .rt-note, .result-note{ font-size: 0.82rem; color: var(--ink-soft); margin: 16px 0 0; }
+  .rt-sentence-label, .result-sentence-label{
     font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-faint); margin: 10px 0 6px;
   }
-  .rt-sentence{
+  .rt-sentence, .result-sentence{
     position: relative; background: var(--surface-sunken); border: 1px solid var(--line);
     border-radius: 8px; padding: 16px 96px 16px 18px; font-size: 0.95rem; line-height: 1.7; margin: 0;
   }
-  .rt-sentence .copy-inline{ position: absolute; top: 10px; right: 10px; font-size: 0.74rem; padding: 4px 10px; }
+  .rt-sentence .copy-inline, .result-sentence .copy-inline{ position: absolute; top: 10px; right: 10px; font-size: 0.74rem; padding: 4px 10px; }
 
   /* ---- genkou (vertical writing) ---- */
   .genkou-controls{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
@@ -268,6 +271,50 @@
     position: absolute; right: 4%; bottom: 2%; font-size: 0.55em; color: var(--ink-soft);
     line-height: 1; writing-mode: horizontal-tb;
   }
+
+  /* ---- real value tool ---- */
+  .rv-guide{ font-size: 0.85rem; color: var(--ink-soft); margin: 0; }
+  .rv-modes{ display: flex; }
+  .rv-fields{ display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+  .rv-field{ display: flex; flex-direction: column; gap: 6px; }
+  .rv-field label{ font-size: 0.78rem; color: var(--ink-soft); }
+  .rv-field input[type="number"]{ width: 150px; font-size: 1.05rem; padding: 9px 12px; }
+  .rv-field.narrow input[type="number"]{ width: 110px; }
+  .rv-grid{ grid-template-columns: repeat(3, 1fr); }
+  .rv-grid .stat-tile{ padding: 10px; }
+  .rv-grid .stat-tile .val{ font-size: 1.05rem; }
+  /* 実質値は「820,348円」のように値が長く、数くらべ(+11ポイント/11%/1.25倍)より
+     桁を食う。狭い幅では「円」やラベルが折り返すため1列に落とす。
+     @media は詳細度を上げないため、必ず上の基本ルールより後ろに置くこと。 */
+  @media (max-width: 520px){
+    .rv-grid{ grid-template-columns: 1fr; }
+    .rv-field{ flex: 1 1 140px; }
+    .rv-field input[type="number"], .rv-field.narrow input[type="number"]{ width: 100%; }
+  }
+
+  /* ---- tool documentation ----
+     使い方 → 計算の考え方 → 例 → 注意 の4ブロック。数字ツールの標準形。 */
+  .tool-doc{ margin-top: 34px; padding-top: 26px; border-top: 1px solid var(--line); }
+  .tool-doc section + section{ margin-top: 26px; }
+  .tool-doc h3{
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--ink-faint); margin: 0 0 10px;
+  }
+  .tool-doc p, .tool-doc ul{
+    font-size: 0.88rem; color: var(--ink-soft); line-height: 1.8; max-width: 68ch;
+  }
+  .tool-doc p{ margin: 0 0 10px; }
+  .tool-doc p:last-child{ margin-bottom: 0; }
+  .tool-doc ul{ margin: 0; padding-left: 1.25em; }
+  .tool-doc li + li{ margin-top: 7px; }
+  .tool-doc .formula{
+    font-family: "JetBrains Mono", "Zen Kaku Gothic New", monospace;
+    font-size: 0.8rem; color: var(--ink); line-height: 2;
+    background: var(--surface-sunken); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 15px; margin: 0 0 10px; overflow-x: auto; white-space: pre;
+  }
+  .tool-doc .formula b{ color: var(--accent-strong); font-weight: 600; }
+  .tool-doc a{ color: var(--accent-strong); text-underline-offset: 2px; }
 
   /* ---- kanji check ---- */
   .kanji-output{
