@@ -181,16 +181,23 @@
       return (n > 0 ? '+' : MINUS) + Math.abs(n).toFixed(1) + '%';
     }
     function yen(n){ return neg(fmtNum(Math.round(n))) + '円'; }
-    /* タイルは「値の一覧」なので3桁固定で桁を揃える。文章は自然言語なので、
-       小数第3位まで計算したうえで末尾の0を落とす。丸めで元の値とずれる場合
-       だけ「約」を付ける（1.2倍・1.04倍は言い切り、1.219倍は「約」）。
-       単なる文字列の0削除ではなく「人間に読ませる値」として扱う。
-       許容差は表示解像度(1e-3)よりはるかに小さく、浮動小数の誤差
-       (1.1の2乗が1.2100000000000002になる類)より大きい値を取る。 */
+    /* 「約」は計算結果が不正確だから付けるのではなく、表示のために丸めたときに付ける。
+       タイルは「値の一覧」なので桁を固定して揃えるが、文章は自然言語なので、
+       表示解像度まで丸めたうえで、元の値とずれた場合だけ「約」を付ける。
+       解像度は値ごとに違う（倍率は小数第3位、金額は1円）。判定に === は使わず、
+       浮動小数の誤差(1.1の2乗が1.2100000000000002、10000÷1.25が
+       8000.000000000001になる類)より大きく、表示解像度より十分小さい
+       1e-9 を許容差とする。 */
+    const EPS = 1e-9;
     function multForSentence(mult){
-      const rounded = Number(mult.toFixed(3));
-      return { text: neg(String(rounded)), approx: Math.abs(rounded - mult) > 1e-9 };
+      const rounded = Number(mult.toFixed(3));   // 表示解像度：小数第3位
+      return { text: neg(String(rounded)), approx: Math.abs(mult - rounded) > EPS };
     }
+    function yenForSentence(n){
+      const rounded = Math.round(n);             // 表示解像度：1円
+      return { text: neg(fmtNum(rounded)) + '円', approx: Math.abs(n - rounded) > EPS };
+    }
+    function withApprox(v){ return (v.approx ? '約' : '') + v.text; }
     function trimNum(str){
       // 入力文字列をそのまま文章に使う（1.50 → 1.5、-2 → −2）
       const v = Number(str);
@@ -278,13 +285,13 @@
     }
 
     function buildSentence(pm, amount, real, change){
-      const m = multForSentence(pm.mult);
-      const multText = (m.approx ? '約' : '') + m.text;
+      const multText = withApprox(multForSentence(pm.mult));
+      const amountText = withApprox(yenForSentence(amount));
       const flat = (mode === 'annual')
         ? (pm.r === 0 || pm.y === 0)
         : (pm.t === 0);
       if (flat){
-        return '物価が変わらなければ、' + yen(amount) + 'の価値も変わりません。';
+        return '物価が変わらなければ、' + amountText + 'の価値も変わりません。';
       }
       let head;
       if (mode === 'annual'){
@@ -296,7 +303,8 @@
         const dir = pm.t > 0 ? '上がる' : '下がる';
         head = '期間全体で物価が' + tDisp + '%' + dir + 'と、物価水準は' + multText + '倍になります。';
       }
-      const tail = 'いまの' + yen(amount) + 'は、そのときの物価では約' + yen(real)
+      const tail = 'いまの' + amountText + 'は、そのときの物価では'
+                 + withApprox(yenForSentence(real))
                  + '分の買い物に相当します（' + signedPct(change) + '）。';
       return head + tail;
     }
