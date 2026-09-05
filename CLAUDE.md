@@ -19,6 +19,7 @@ Until 工程7 the whole site was a single `index.html` with a hash router (`#/co
 /tools/writing/manuscript-paper/index.html      原稿用紙エディタ
 /tools/writing/kanji-check/index.html           漢字利用チェック
 /tools/numbers/number-comparison/index.html     数くらべ
+/tools/numbers/real-value/index.html            実質値
 ```
 
 `/tools/`, `/tools/writing/`, `/tools/numbers/` に `index.html` は置かない。GitHub Pages はディレクトリ一覧を返さないのでこれらは404になる。これは意図した状態であり、空のカテゴリページを先回りして作らない（ROADMAP §4 7番目）。ローカルの `python3 -m http.server` はディレクトリ一覧を返すため、この1点だけ本番と挙動が違う。
@@ -54,13 +55,24 @@ Each tool page consumes them like this, so the tool's own code stays byte-identi
 
 **この境界は意図的である。** ツール固有の計算・変換ロジックを `common.js` へ移さないこと。逆に、複数ページが同じロジックを持つ状態も作らないこと。`layoutGenkou()` が共通側にあるのは、文字数カウント（原稿用紙の枚数）と原稿用紙エディタの両方が使っており、禁則や原稿用紙仕様を直すたびに同期漏れの危険が出るため。判断基準は「実際に2ページ以上が使っているか」の一点。
 
-**Element IDs are prefixed per tool** (`cnt-`, `zh-`, `kn-`, `gk-`, `kj-`, `rt-`)。ページが分かれた今も接頭辞は維持する（CSSが全ページ共通なため、また `rt-` のように過去の名残を含むIDを安定させておくため）。なお 数くらべ の要素ID接頭辞 `rt-` は旧名「割合・増減率」の名残で、表示名やURL（`number-comparison`）とは一致しない。壊す理由がないので据え置いている。
+**Element IDs are prefixed per tool** (`cnt-`, `zh-`, `kn-`, `gk-`, `kj-`, `rt-`, `rv-`)。ページが分かれた今も接頭辞は維持する（CSSが全ページ共通なため、また `rt-` のように過去の名残を含むIDを安定させておくため）。なお 数くらべ の要素ID接頭辞 `rt-` は旧名「割合・増減率」の名残で、表示名やURL（`number-comparison`）とは一致しない。壊す理由がないので据え置いている。
+
+**結果の表示は共有クラスを使う。** 結果の文章枠・注記・値なしのダッシュは、数字ツールで共通の見た目になる。`.result-sentence` / `.result-sentence-label` / `.result-note` / `.val-dash` を使うこと。数くらべの `.rt-sentence` などは同じ定義を共有する別名として残してあるだけで、新しいツールでは使わない。
+
+**説明ブロックは `.tool-doc` の4部構成。** 数字ツールは本体の下に `使い方 → 計算の考え方 → 例 → 注意` を置く（実質値が最初の実装で、以後の型になる）。`計算の考え方` には `.formula` で式そのものを出す。個別の統計や制度の解説ページにはしない — 外部の一次情報へのリンクで逃がす。
 
 **Tools do not share input state with each other.** ページが分かれたので構造的にも共有されない。各ツールが自分の入力欄（テキストツールは `<textarea>`、数くらべは number 入力）を持つ。
 
 **旧ハッシュURLの互換転送。** `index.html` に6件のマップ（`count`/`zenhan`/`kana`/`genkou`/`kanji`/`ratio` → 各実URL）を置き、`location.replace()` で転送する。`hashchange` にも同じ処理を張ってある。期限は設けない — 維持コストがほぼゼロで、壊す理由がないため。**新しいツールにハッシュ形式のURLを与えないこと。** このマップは過去の6件だけのためにある。
 
+**時点依存のデータをサイト内に持たない。** これは「入力を外に出さない」と並ぶ設計の柱で、ROADMAP §5・§6・§4 8番目に根拠がある。為替レート、タイムゾーンのオフセット表、消費者物価指数の系列——いずれも自前で抱えると、更新が止まった瞬間に「静かに間違ったサイト」になる。実質値ツールが物価データを持たず、利用者が入力した率だけで計算するのはこのためである。委ね先がある場合はブラウザの標準API（時差なら `Intl.DateTimeFormat`）に完全に委ね、委ね先がない場合はデータを持たずに一次情報へのリンクで逃がす。**新しいツールに「最新の実績値」をプリセットとして埋め込まないこと。** ボタン一つで入る値は、利用者には「このサイトが正しいと言っている値」に見える。
+
 **No network requests beyond fonts.** 唯一許可される外部リクエストは Google Fonts のスタイルシートのみ。それ以外は何も取得せず、利用者の入力はどこにも送らない。ユーザーへの説明は「入力文章は送信されません」と書く。「完全にローカルで動作」とは書かない — Google Fonts の取得は実際にネットワーク通信であり、強い主張のほうは不正確になる。
+
+**CSSの落とし穴が二つある。** どちらも実際に踏んだ。
+
+1. `@media` はセレクタの詳細度を上げない。同じ詳細度なら**後ろに書いたルールが勝つ**ため、狭い幅用の上書きは、対象の基本ルールより**後ろ**に置く。`/assets/style.css` は「共通 → 各ツール」の順に並んでいるので、ツール固有のメディアクエリはそのツールのセクション末尾に書くこと（共通の `@media (max-width: 520px)` ブロックに足すと、後続のツール基本ルールに負けて効かない）。
+2. `hidden` 属性は `display` を持つクラスに負ける。`.rv-fields{ display: flex }` のような指定があると `hidden` が効かない。`[hidden]{ display: none !important; }` を先頭付近で全体に効かせてあるので、この規則は消さないこと。JSで `el.hidden` を切り替えている箇所はすべてこれに依存している。
 
 **Design tokens** are CSS custom properties on `:root` in `/assets/style.css`, redefined for dark mode via `@media (prefers-color-scheme: dark)` guarded with `:root:not([data-theme="light"])`, and again under `:root[data-theme="dark"]` for an explicit override (there is no theme-toggle UI yet — theme currently follows the OS only). Reuse these exact values for new tools rather than inventing a new palette:
 
