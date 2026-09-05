@@ -30,7 +30,12 @@ There is no build/lint/test tooling. To develop:
 
 - Edit the `.html` / `.css` / `.js` files directly.
 - **Preview with a static server rooted at the repository root**, e.g. `python3 -m http.server <port>` from this directory, then open `http://localhost:<port>/`. All internal links and asset references are root-absolute (`/assets/style.css`, `/tools/writing/...`), so **opening a file directly via `file://` no longer works** — that was a property of the single-file era and is intentionally gone. Local verification is now "run the site as a site".
-- Verify behavior by driving the page's own JS state (`document.getElementById(...).value = ...; el.dispatchEvent(new Event('input'))`, then read the resulting DOM/state back) rather than trusting a screenshot alone — screenshots in this environment have shown stale/cached renders.
+- **検証は4層に分けて、どれか一つで済ませない。** 自動テストが通ったことと、画面が正しいことは別である（工程5・工程8で実際に、テスト通過後にスクリーンショットで不具合が見つかっている）。
+  1. **ロジック検算** — 計算結果を、ページのJSとは独立に計算した期待値と突き合わせる。ページの実装で期待値を作らないこと。
+  2. **DOM状態** — `document.getElementById(...).value = ...; el.dispatchEvent(new Event('input'))` で状態を動かし、結果のDOMを読み返す。
+  3. **実描画** — 計算後のスタイルと実寸で確かめる。`el.hidden` が true でも `display` を持つクラスに負けて見えていることがあり、`@media` の上書きが後続ルールに負けて効いていないこともある。`offsetWidth`/`getBoundingClientRect()`/`getComputedStyle()` で「実際に何が描画されたか」を見る。スクリーンショットも撮って目で確かめる。
+  4. **実機** — 書体（Google Fontsが読める環境か）、約物の縦書き字形、印刷、iPhoneでのタッチ操作、ダークテーマ。ここは自動化できないので人が見る。
+- なお、この環境のスクリーンショットは古い描画を返したことがある。読み込み直後に撮り、3の計算値による検査と併用すること。
 - Every page must start with `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">…`. Omitting the charset meta tag breaks encoding detection — an earlier version that started straight from `<title>` with no charset declaration was confirmed to render as mojibake in Safari.
 
 ## Architecture
@@ -58,6 +63,8 @@ Each tool page consumes them like this, so the tool's own code stays byte-identi
 **Element IDs are prefixed per tool** (`cnt-`, `zh-`, `kn-`, `gk-`, `kj-`, `rt-`, `rv-`)。ページが分かれた今も接頭辞は維持する（CSSが全ページ共通なため、また `rt-` のように過去の名残を含むIDを安定させておくため）。なお 数くらべ の要素ID接頭辞 `rt-` は旧名「割合・増減率」の名残で、表示名やURL（`number-comparison`）とは一致しない。壊す理由がないので据え置いている。
 
 **結果の表示は共有クラスを使う。** 結果の文章枠・注記・値なしのダッシュは、数字ツールで共通の見た目になる。`.result-sentence` / `.result-sentence-label` / `.result-note` / `.val-dash` を使うこと。数くらべの `.rt-sentence` などは同じ定義を共有する別名として残してあるだけで、新しいツールでは使わない。
+
+**タイルの値と文章中の値は精度の扱いを変える。** タイル（`.stat-tile .val`）は値の一覧なので桁を固定して揃える（実質値なら倍率は常に3桁、`1.200倍` / `1.195倍`）。「文章にすると」は自然言語なので、同じ桁で計算したうえで末尾の0を落とし、丸めで元の値とずれる場合だけ「約」を付ける（`1.2倍`・`1.04倍` は言い切り、`1.219倍` は「約1.219倍」）。単なる文字列の0削除ではなく「人間に読ませる値」として扱うこと。判定の許容差は表示解像度より十分小さく、浮動小数の誤差（`1.1` の2乗が `1.2100000000000002` になる類）より大きく取る。
 
 **説明ブロックは `.tool-doc` の4部構成。** 数字ツールは本体の下に `使い方 → 計算の考え方 → 例 → 注意` を置く（実質値が最初の実装で、以後の型になる）。`計算の考え方` には `.formula` で式そのものを出す。個別の統計や制度の解説ページにはしない — 外部の一次情報へのリンクで逃がす。
 

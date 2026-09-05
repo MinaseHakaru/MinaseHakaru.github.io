@@ -181,6 +181,16 @@
       return (n > 0 ? '+' : MINUS) + Math.abs(n).toFixed(1) + '%';
     }
     function yen(n){ return neg(fmtNum(Math.round(n))) + '円'; }
+    /* タイルは「値の一覧」なので3桁固定で桁を揃える。文章は自然言語なので、
+       小数第3位まで計算したうえで末尾の0を落とす。丸めで元の値とずれる場合
+       だけ「約」を付ける（1.2倍・1.04倍は言い切り、1.219倍は「約」）。
+       単なる文字列の0削除ではなく「人間に読ませる値」として扱う。
+       許容差は表示解像度(1e-3)よりはるかに小さく、浮動小数の誤差
+       (1.1の2乗が1.2100000000000002になる類)より大きい値を取る。 */
+    function multForSentence(mult){
+      const rounded = Number(mult.toFixed(3));
+      return { text: neg(String(rounded)), approx: Math.abs(rounded - mult) > 1e-9 };
+    }
     function trimNum(str){
       // 入力文字列をそのまま文章に使う（1.50 → 1.5、-2 → −2）
       const v = Number(str);
@@ -268,7 +278,8 @@
     }
 
     function buildSentence(pm, amount, real, change){
-      const multText = fixed(pm.mult, 3);
+      const m = multForSentence(pm.mult);
+      const multText = (m.approx ? '約' : '') + m.text;
       const flat = (mode === 'annual')
         ? (pm.r === 0 || pm.y === 0)
         : (pm.t === 0);
@@ -279,7 +290,7 @@
       if (mode === 'annual'){
         const rateDisp = trimNum(Math.abs(pm.r));
         const dir = pm.r > 0 ? '上昇' : '下落';
-        head = '年' + rateDisp + '%の物価' + dir + 'が' + trimNum(pm.yearsStr) + '年続くと、物価水準は約' + multText + '倍になります。';
+        head = '年' + rateDisp + '%の物価' + dir + 'が' + trimNum(pm.yearsStr) + '年続くと、物価水準は' + multText + '倍になります。';
       } else {
         const tDisp = trimNum(Math.abs(pm.t));
         const dir = pm.t > 0 ? '上がる' : '下がる';
